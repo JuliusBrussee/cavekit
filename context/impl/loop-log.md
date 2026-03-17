@@ -69,3 +69,11 @@
 - **Files:** internal/tmux/input.go, internal/tmux/input_test.go
 - **Validation:** Build P, Tests 4/4 P, Acceptance 3/3
 - **Next:** T-010 — Tmux status detection
+
+### Iteration 10 — 2026-03-17
+- **Task:** T-010 — Tmux status detection (active/prompt via content hashing)
+- **Tier:** 1
+- **Status:** DONE
+- **Files:** internal/tmux/status.go, internal/tmux/status_test.go
+- **Validation:** Build P, Tests 5/5 P, Acceptance 3/3
+- **Next:** T-012 — Git diff stats
