@@ -409,7 +409,7 @@ This removes the orientation cost at the start of each session — agents begin 
 
 ### With `bp:blueprint-writing`
 
-Implementation tracking references specs by requirement ID. When a task is completed, its acceptance criteria map back to spec requirements. When dead ends are found, they may reveal spec gaps that need backpropagation.
+Implementation tracking references specs by requirement ID. When a task is completed, its acceptance criteria map back to spec requirements. When dead ends are found, they may reveal spec gaps that need revision.
 
 ### With `bp:validation-first`
 

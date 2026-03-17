@@ -1,5 +1,5 @@
 {
   "name": "bp",
-  "description": "Blueprint Framework — a methodology for building software with AI coding agents where blueprints drive the development process — code is derived from them. Includes DABI lifecycle, prompt pipelines, validation gates, backpropagation, convergence monitoring, and agent team coordination patterns.",
+  "description": "Blueprint Framework — a methodology for building software with AI coding agents where blueprints drive the development process — code is derived from them. Includes DABI lifecycle, prompt pipelines, validation gates, revision, convergence monitoring, and agent team coordination patterns.",
   "version": "2.0.0"
 }

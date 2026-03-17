@@ -28,7 +28,7 @@ How each git feature serves the agent:
 | **Status** (`git status`) | Check what is modified/untracked | Start of each iteration, before commits |
 | **Stash** (`git stash`) | Temporarily set aside work | When switching between tasks |
 | **Tags** | Mark significant milestones | End of successful iteration runs |
-| **Blame** (`git blame`) | Understand who/what changed a file | During debugging and backpropagation |
+| **Blame** (`git blame`) | Understand who/what changed a file | During debugging and revision |
 
 ---
 
@@ -41,7 +41,7 @@ Each commit is a **progress cookie** -- a checkpoint that:
 - Can be read by the next iteration (`git log`)
 - Can be compared against (`git diff HEAD~1`)
 - Can be reverted if an approach fails
-- Provides granular history for backpropagation
+- Provides granular history for revision
 
 ### When to Commit
 
@@ -363,7 +363,7 @@ git diff HEAD~1 --stat | tail -1  # e.g., "5 files changed, 45 insertions, 20 de
 # Decreasing numbers = convergence
 ```
 
-### Backpropagation Support
+### Revision Support
 
 ```bash
 # Find commits that were manual fixes (not from iteration loop)
@@ -416,7 +416,7 @@ Git serves as the complete working memory system for AI agents in SDD:
 4. **Branches isolate experiments** -- failed approaches can be cleanly abandoned
 5. **Worktrees isolate agents** -- parallel work without file conflicts
 6. **Status shows current state** -- agents know what is in progress
-7. **History supports backpropagation** -- tracing bugs back to their source
+7. **History supports revision** -- tracing bugs back to their source
 
 The fundamental rule remains:
 

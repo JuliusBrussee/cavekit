@@ -384,30 +384,30 @@ iteration-loop context/prompts/003-generate-impl-from-plans.md -n 5 -t 1h
 
 ---
 
-## 9. Convergence and Backpropagation
+## 9. Convergence and Revision
 
-Backpropagation directly improves convergence by making specs more complete:
+Revision directly improves convergence by making specs more complete:
 
 ```
-Without backpropagation:
+Without revision:
   Iteration 1: 200 lines, 5 manual fixes -> specs unchanged
   Iteration 2: 180 lines, 4 manual fixes -> specs unchanged
   Iteration 3: 170 lines, 4 manual fixes -> NOT converging
 
-With backpropagation:
+With revision:
   Iteration 1: 200 lines, 5 manual fixes -> specs updated with 5 new requirements
   Iteration 2: 100 lines, 2 manual fixes -> specs updated with 2 new requirements
   Iteration 3: 50 lines, 0 manual fixes  -> CONVERGING
 ```
 
-**Frequent manual fixes without backpropagation = non-convergence.** The iteration loop keeps producing the same bugs because nothing in the specs prevents them.
+**Frequent manual fixes without revision = non-convergence.** The iteration loop keeps producing the same bugs because nothing in the specs prevents them.
 
 ---
 
 ## Cross-References
 
 - **Convergence patterns reference:** See `references/convergence-patterns.md` for the complete convergence pattern catalog with examples.
-- **Backpropagation:** See `bp:revision` skill for how tracing bugs to specs improves convergence.
+- **Revision:** See `bp:revision` skill for how tracing bugs to specs improves convergence.
 - **Prompt pipeline:** See `bp:prompt-pipeline` skill for designing prompts with proper exit criteria and completion signals.
 - **Validation-first design:** See `bp:validation-first` skill for building validation gates that provide convergence signals.
 - **Impl tracking:** See `bp:impl-tracking` skill for tracking progress and detecting ceiling conditions.

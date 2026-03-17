@@ -136,28 +136,30 @@ if [[ -d "context/sites" ]]; then
   while IFS= read -r -d '' f; do
     # Skip archive directory
     [[ "$f" == *"/archive/"* ]] && continue
-    # Skip non-frontier/site files (must have "site" or "site" in name)
-    [[ "$(basename "$f")" != *site* && "$(basename "$f")" != *site* ]] && continue
+    # Skip non-site files (must have "site" in name)
+    [[ "$(basename "$f")" != *site* ]] && continue
     ALL_CANDIDATES+=("$f")
   done < <(find "context/sites" -maxdepth 1 -name "*.md" -type f -print0 2>/dev/null | sort -z)
 fi
 
 # Apply filter if set — match filter anywhere in filename
 CANDIDATES=()
-if [[ -n "$FILTER" ]]; then
-  for f in "${ALL_CANDIDATES[@]}"; do
-    bn="$(basename "$f")"
-    if [[ "$bn" == *"$FILTER"* ]]; then
-      CANDIDATES+=("$f")
+if [[ ${#ALL_CANDIDATES[@]} -gt 0 ]]; then
+  if [[ -n "$FILTER" ]]; then
+    for f in "${ALL_CANDIDATES[@]}"; do
+      bn="$(basename "$f")"
+      if [[ "$bn" == *"$FILTER"* ]]; then
+        CANDIDATES+=("$f")
+      fi
+    done
+    # If filter matched nothing, fall back to all candidates
+    if [[ ${#CANDIDATES[@]} -eq 0 ]]; then
+      echo "⚠️  Filter '$FILTER' matched no build sites, searching all" >&2
+      CANDIDATES=("${ALL_CANDIDATES[@]}")
     fi
-  done
-  # If filter matched nothing, fall back to all candidates
-  if [[ ${#CANDIDATES[@]} -eq 0 ]]; then
-    echo "⚠️  Filter '$FILTER' matched no frontiers, searching all" >&2
+  else
     CANDIDATES=("${ALL_CANDIDATES[@]}")
   fi
-else
-  CANDIDATES=("${ALL_CANDIDATES[@]}")
 fi
 
 if [[ ${#CANDIDATES[@]} -eq 0 ]]; then
@@ -274,7 +276,7 @@ if [[ -d "context/blueprints" ]]; then
 fi
 
 SPEC_LISTING=""
-for f in "${SPEC_FILES[@]}"; do
+for f in "${SPEC_FILES[@]+"${SPEC_FILES[@]}"}"; do
   SPEC_LISTING="${SPEC_LISTING}\n- \`$f\`"
 done
 

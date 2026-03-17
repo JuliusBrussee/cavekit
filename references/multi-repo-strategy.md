@@ -45,7 +45,7 @@ Implementation-agnostic specifications that define what the new system must do.
 ```
 shared-context/
 +-- specs/
-|   +-- spec-overview.md           # Index of all specs
+|   +-- blueprint-overview.md           # Index of all specs
 |   +-- spec-features.md           # Feature requirements
 |   +-- spec-ui-requirements.md    # UI/UX requirements
 |   +-- spec-data.md               # Data model specs
@@ -60,7 +60,7 @@ shared-context/
 **Characteristics:**
 - Framework-agnostic (describes WHAT, not HOW)
 - Shared across all implementations
-- Updated through backpropagation from any implementation
+- Updated through revision from any implementation
 - Contains shared prompts for spec-level phases
 
 ### Tier 3: Application Context (Framework-Specific)
@@ -71,7 +71,7 @@ Plans, implementation tracking, and framework-specific prompts for each implemen
 {framework}-prototype/
 +-- context/
 |   +-- plans/
-|   |   +-- plan-feature-frontier.md  # Feature dependencies for this framework
+|   |   +-- plan-build-site.md  # Feature dependencies for this framework
 |   |   +-- plan-known-issues.md      # Known issues in this implementation
 |   |   +-- plan-auth.md              # How to implement auth in {FRAMEWORK}
 |   |   +-- plan-ui.md                # How to implement UI in {FRAMEWORK}
@@ -80,7 +80,7 @@ Plans, implementation tracking, and framework-specific prompts for each implemen
 |   +-- prompts/
 |   |   +-- 004-create-plans.md      # Framework-specific prompt
 |   |   +-- 005-implement.md         # Framework-specific prompt
-|   |   +-- 006-update-specs.md      # Backpropagation prompt
+|   |   +-- 006-update-specs.md      # Revision prompt
 |   +-- research/
 |       +-- research-{framework}.md  # Framework research findings
 +-- shared-context/                   # <-- git submodule
@@ -108,7 +108,7 @@ shared-context-repo/
 |   +-- ref-ui-components.md
 |   +-- ref-library.md
 +-- specs/
-|   +-- spec-overview.md
+|   +-- blueprint-overview.md
 |   +-- spec-features.md
 |   +-- spec-ui-requirements.md
 |   +-- spec-data.md
@@ -179,7 +179,7 @@ git add shared-context
 git commit -m "Update shared context to latest specs"
 ```
 
-### Backpropagation Across Repos
+### Revision Across Repos
 
 When an implementation discovers a spec gap:
 
@@ -240,7 +240,7 @@ Prompts that operate on framework-specific artifacts:
 |--------|-------|-------|--------|
 | `004-create-plans.md` | Plan | Specs + framework research | `plans/` |
 | `005-implement.md` | Implement | Plans + specs | `src/`, `tests/`, `impl/` |
-| `006-update-specs.md` | Iterate | Working prototype | Updated specs (backpropagation) |
+| `006-update-specs.md` | Iterate | Working prototype | Updated specs (revision) |
 
 ### Runtime Variables in Multi-Repo Prompts
 
@@ -266,7 +266,7 @@ Read `context/research/research-{FRAMEWORK}.md` for framework patterns.
 The most powerful benefit: identical specifications drive completely different implementations.
 
 ```
-shared-context/specs/spec-auth.md
+shared-context/blueprints/spec-auth.md
     |
     +-> react-prototype/context/plans/plan-auth.md (React + NextAuth)
     |   +-> React implementation with NextAuth
@@ -324,7 +324,7 @@ web-app-specs/
 |   +-- ref-data-models.md       # Database schema documentation
 |   +-- ref-user-flows.md        # User journey documentation
 +-- specs/
-|   +-- spec-overview.md         # All features with acceptance criteria
+|   +-- blueprint-overview.md         # All features with acceptance criteria
 |   +-- spec-auth.md             # Authentication: login, register, sessions
 |   +-- spec-dashboard.md        # Dashboard: data display, filtering, export
 |   +-- spec-settings.md         # Settings: profile, preferences, notifications
@@ -527,7 +527,7 @@ To update: `cd shared-context && git pull origin main && cd ..`
 
 ---
 
-## 11. Backpropagation in Multi-Repo
+## 11. Revision in Multi-Repo
 
 When a bug is found in one implementation:
 
@@ -559,7 +559,7 @@ When a bug is found in one implementation:
 Bug found in Framework A implementation
   |
   +-> Is the spec missing a requirement?
-  |     YES -> Fix shared-context/specs/ -> update ALL repos
+  |     YES -> Fix shared-context/blueprints/ -> update ALL repos
   |     NO  -> continue
   |
   +-> Is the plan wrong for this framework?
@@ -582,4 +582,4 @@ The multi-repo strategy enables:
 4. **Independent plans** -- each framework has its own implementation approach
 5. **Git submodules** as the connection mechanism
 6. **3-tier hierarchy** separating What IS, What MUST BE, and How To Build
-7. **Backpropagation across repos** -- spec bugs found anywhere fix everywhere
+7. **Revision across repos** -- spec bugs found anywhere fix everywhere

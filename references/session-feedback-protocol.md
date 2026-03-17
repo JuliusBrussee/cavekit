@@ -459,7 +459,7 @@ Human Session 1 (brainstorming, spec review)
   -> session-feedback + plan-next-session.md
     -> Agent Session 2 (implementation iteration loop)
       -> session-feedback + plan-next-session.md
-        -> Human Session 3 (review, backpropagation)
+        -> Human Session 3 (review, revision)
           -> session-feedback + plan-next-session.md
             -> Agent Session 4 (implementation iteration loop)
 ```

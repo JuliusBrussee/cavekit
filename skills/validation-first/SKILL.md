@@ -187,7 +187,7 @@ curl -f http://localhost:{PORT}/health
 1. Agent completes Gates 1-5 and reports results
 2. Human reviews the implementation against spec intent
 3. Human provides feedback as issues or spec updates
-4. If feedback requires code changes, it enters the backpropagation loop:
+4. If feedback requires code changes, it enters the revision loop:
    - Update specs with the missing requirement
    - Re-run iteration loop
    - Verify the fix emerges from updated specs
@@ -250,7 +250,7 @@ Phase gates are mandatory verification checkpoints between DABI phases. They ens
 
 | Transition | Gate Condition | How to Verify |
 |------------|---------------|---------------|
-| **Spec → Plan** | All domains have specs with testable acceptance criteria | Review spec-overview.md; every R{N} has AC items |
+| **Spec → Plan** | All domains have specs with testable acceptance criteria | Review blueprint-overview.md; every R{N} has AC items |
 | **Plan → Implement** | Plans reference specs, define sequence, include test strategies | Review plan files; every task maps to spec requirements |
 | **Implement → Iterate** | Code builds (Gate 1), tests pass (Gate 2), impl tracking is current | Run `{BUILD_COMMAND}` and `{TEST_COMMAND}`; check impl tracking |
 | **Iterate → Monitor** | Convergence detected: changes decreasing iteration-over-iteration | Compare diffs across last 3-5 iterations |

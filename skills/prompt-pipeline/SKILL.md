@@ -1,7 +1,7 @@
 ---
 name: prompt-pipeline
 description: >
-  How to design the numbered prompt pipeline that drives DABI phases in Spec-Driven Development.
+  How to design the numbered prompt pipeline that drives DABI phases in Blueprint.
   Covers greenfield 3-prompt patterns, rewrite 6-9 prompt patterns, shared principles,
   prompt engineering best practices, task templates, and time guards.
   Trigger phrases: "prompt pipeline", "design prompts for SDD", "create DABI prompts",
@@ -31,13 +31,13 @@ Pipeline Flow:
 
 | Prompt File | Lifecycle Stage | Reads From | Writes To | Description |
 |-------------|----------------|------------|-----------|-------------|
-| `001-generate-specs-from-refs.md` | **Spec** | `context/refs/` | `context/specs/` | Reads reference materials, decomposes into domain-specific specs with cross-references and testable acceptance criteria |
-| `002-generate-plans-from-specs.md` | **Plan** | `context/specs/` + `context/impl/` | `context/plans/` | Reads specs plus implementation progress, creates framework-specific plans with feature dependencies, test strategies, and acceptance criteria |
-| `003-generate-impl-from-plans.md` | **Implement** | `context/plans/` + `context/specs/` | `src/`, `tests/`, `context/impl/` | Implements the highest-priority unblocked work from plans, runs tests, updates implementation tracking |
+| `001-generate-specs-from-refs.md` | **Spec** | `context/refs/` | `context/blueprints/` | Reads reference materials, decomposes into domain-specific specs with cross-references and testable acceptance criteria |
+| `002-generate-plans-from-specs.md` | **Plan** | `context/blueprints/` + `context/impl/` | `context/plans/` | Reads specs plus implementation progress, creates framework-specific plans with feature dependencies, test strategies, and acceptance criteria |
+| `003-generate-impl-from-plans.md` | **Implement** | `context/plans/` + `context/blueprints/` | `src/`, `tests/`, `context/impl/` | Implements the highest-priority unblocked work from plans, runs tests, updates implementation tracking |
 
 ### Key behaviors
 
-- **Prompt 001** runs once or a few times to stabilize specs. It reads `context/refs/` and produces `context/specs/`.
+- **Prompt 001** runs once or a few times to stabilize specs. It reads `context/refs/` and produces `context/blueprints/`.
 - **Prompt 002** reads specs and any existing implementation tracking (`context/impl/`). It produces plans that sequence the work.
 - **Prompt 003** reads plans and specs, implements code, runs validation gates, and updates `context/impl/` with progress.
 - **Prompts 002 and 003 modify each other's files.** This bidirectional flow is expected and healthy -- it is how the system self-corrects.
@@ -57,14 +57,14 @@ Read all files in `context/refs/`. These are the source of truth.
 
 ## Task
 Decompose the reference materials into domain-specific specifications:
-1. Create `context/specs/spec-overview.md` as the index file
-2. Create one `context/specs/spec-{domain}.md` per domain
+1. Create `context/blueprints/blueprint-overview.md` as the index file
+2. Create one `context/blueprints/spec-{domain}.md` per domain
 3. Each spec must include: Scope, Requirements with Acceptance Criteria, Dependencies, Out of Scope, Cross-References
 
 ## Exit Criteria
 - [ ] All domains from reference materials have corresponding spec files
 - [ ] Every requirement has at least one testable acceptance criterion
-- [ ] spec-overview.md indexes all spec files with one-line summaries
+- [ ] blueprint-overview.md indexes all spec files with one-line summaries
 - [ ] Cross-references link related specs
 
 ## Completion Signal
@@ -95,7 +95,7 @@ Pipeline Flow:
 | Prompt File | Lifecycle Stage | Reads From | Writes To |
 |-------------|----------------|------------|-----------|
 | `001-generate-refs-from-code.md` | Pre-Spec | Old application source | `shared-context/reference/` (API docs, data models, UI components) |
-| `002-generate-specs.md` | Spec | Feature scope + reference materials | `shared-context/specs/` (implementation-agnostic specs) |
+| `002-generate-specs.md` | Spec | Feature scope + reference materials | `shared-context/blueprints/` (implementation-agnostic specs) |
 | `003-validate-specs.md` | Spec QA | Reference + specs | Validation report (specs match old behavior) |
 | `004-create-plans.md` | Plan | Specs + framework research | `context/plans/` (framework-specific plans) |
 | `005-implement.md` | Implement | Plans + specs | `src/` + `tests/` + `context/impl/` |
@@ -128,13 +128,13 @@ These principles apply regardless of whether the pipeline is greenfield, rewrite
 
 ```
 Prompt 002 (Plans):
-  READS:  context/specs/     (what to build)
+  READS:  context/blueprints/     (what to build)
   READS:  context/impl/      (what has been built, what failed)
   WRITES: context/plans/     (how to build it)
 
 Prompt 003 (Implement):
   READS:  context/plans/     (how to build it)
-  READS:  context/specs/     (acceptance criteria)
+  READS:  context/blueprints/     (acceptance criteria)
   WRITES: src/, tests/       (the code)
   WRITES: context/impl/      (progress tracking)
   WRITES: context/plans/     (updates to plans based on implementation reality)
@@ -245,7 +245,7 @@ You are implementing {DOMAIN} for the {PROJECT_NAME} project.
 - Your impl tracking: context/impl/impl-{DOMAIN}.md
 
 ### Context to Read First
-1. context/specs/spec-{DOMAIN}.md (WHAT to build)
+1. context/blueprints/spec-{DOMAIN}.md (WHAT to build)
 2. context/plans/plan-{DOMAIN}.md (HOW to build it)
 3. context/impl/impl-{DOMAIN}.md (what has been done)
 4. git log --oneline -20 (recent history)
@@ -447,5 +447,5 @@ The iteration loop handles: iteration counting, timeouts, nudging idle agents, d
 - **Prompt engineering details:** See `references/prompt-engineering.md` for the complete reference on runtime inputs, spawn templates, task templates, time guards, and file ownership.
 - **Agent team patterns:** See `references/agent-team-patterns.md` for coordination patterns, batching, worktree isolation, and merge protocol.
 - **Convergence monitoring:** See `bp:convergence-monitoring` skill for detecting when the iteration loop should stop.
-- **Backpropagation:** See `bp:revision` skill for how prompt 006 traces bugs back to specs.
+- **Revision:** See `bp:revision` skill for how prompt 006 traces bugs back to specs.
 - **Context architecture:** See `bp:context-architecture` skill for the directory structure that prompts read from and write to.
