@@ -103,6 +103,44 @@ if [[ "$IS_WORKTREE" == "false" ]]; then
 
   if [[ -d "$WT_PATH" ]]; then
     echo "📂 Using existing worktree: $WT_PATH"
+
+    # ─── Auto-merge main into worktree branch (R1: Auto-Merge on Resume) ───
+    # Ensure the agent always works with the latest code from main.
+    MERGE_BASE_BRANCH="main"
+    # Fetch latest main so we merge up-to-date content
+    git fetch origin "$MERGE_BASE_BRANCH" 2>/dev/null || true
+
+    # Perform the merge inside the worktree directory
+    MERGE_OUTPUT=$(cd "$WT_PATH" && git merge "origin/$MERGE_BASE_BRANCH" --no-edit 2>&1) || {
+      MERGE_EXIT=$?
+      if echo "$MERGE_OUTPUT" | grep -q "CONFLICT"; then
+        # Abort the failed merge to leave worktree in clean state
+        (cd "$WT_PATH" && git merge --abort 2>/dev/null || true)
+        echo "❌ Merge conflicts detected merging $MERGE_BASE_BRANCH into $BRANCH_NAME" >&2
+        echo "" >&2
+        echo "Conflicting files:" >&2
+        echo "$MERGE_OUTPUT" | grep "CONFLICT" >&2
+        echo "" >&2
+        echo "Options:" >&2
+        echo "  1. Resolve manually: cd $WT_PATH && git merge origin/$MERGE_BASE_BRANCH" >&2
+        echo "  2. Abort and recreate: git worktree remove $WT_PATH && re-run build" >&2
+        echo "  3. Continue without merge (worktree may be stale)" >&2
+        exit 1
+      else
+        echo "⚠️  Merge failed (exit $MERGE_EXIT): $MERGE_OUTPUT" >&2
+        echo "   Continuing with existing worktree state." >&2
+      fi
+    }
+
+    # Log merge result if successful
+    if [[ $? -eq 0 ]] && [[ -n "$MERGE_OUTPUT" ]]; then
+      if echo "$MERGE_OUTPUT" | grep -q "Already up to date"; then
+        echo "✅ Worktree already up to date with $MERGE_BASE_BRANCH"
+      else
+        echo "✅ Merged $MERGE_BASE_BRANCH into $BRANCH_NAME"
+        echo "   $MERGE_OUTPUT" | head -5
+      fi
+    fi
   else
     # Create branch if needed
     if ! git rev-parse --verify "$BRANCH_NAME" &>/dev/null; then

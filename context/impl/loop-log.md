@@ -1,40 +1,7 @@
-### Iteration 1 — 2026-03-17
-- **Task:** T-043 — Wire tick loop: capture, diff, progress, auto-yes, status + T-044 (implicit) + T-054 (DiffTab scroll) + T-048 (scroll actions) + T-051 (--autoyes flag) + T-052 (status progress) + T-056 (program preflight)
-- **Tier:** 6
+### Iteration 1 — 2026-03-20
+- **Task:** T-004 — Merge main into existing worktree branch on build start
+- **Tier:** 0
 - **Status:** DONE
-- **Files:** internal/tui/app.go (rewritten), internal/tui/app_test.go (updated), internal/tui/keyhandler.go (added ActionTextInput, ActionBackspace, text input overlay support), internal/tui/difftab.go (scroll position applied), cmd/blueprint/main.go (rewritten with --autoyes, progress, preflight)
-- **Validation:** Build P, Tests all P, Acceptance: tick captures content P, tick refreshes diff P, tick updates progress P, tick runs auto-yes P, tick detects status P, tabs instantiated and piped P, scroll handling P, --autoyes flag P, status progress P, program preflight P
-- **Note:** T-043, T-044, T-048, T-051, T-052, T-054, T-056 all implemented in single iteration because they are tightly coupled (can't wire tick without tab instances; scroll actions need diff tab wiring; CLI needs to pass autoyes to Run)
-- **Next:** T-045 — Handle ActionOpen (tmux attach/detach)
-
-### Iteration 2 — 2026-03-17
-- **Task:** T-045 — Handle ActionOpen: tmux attach/detach with TUI suspend
-- **Tier:** 6
-- **Status:** DONE
-- **Files:** internal/tui/app.go (attachCmd, attachFinishedMsg, ActionOpen handler)
-- **Validation:** Build P, Tests P, Acceptance: Enter attaches to tmux P, tea.ExecProcess suspends TUI P, resume on detach P
-- **Next:** T-046 — Handle ActionPush
-
-### Iteration 3 — 2026-03-17
-- **Task:** T-046 — Handle ActionPush + T-047 — Handle ActionCheckout/ActionResume
-- **Tier:** 6
-- **Status:** DONE
-- **Files:** internal/tui/app.go (pendingAction field, ActionPush/Checkout/Resume handlers, push dispatch in ActionConfirmYes)
-- **Validation:** Build P, Tests P, Acceptance: push with confirmation P, checkout switches to terminal tab P, resume calls sessionMgr.Resume P
-- **Next:** T-049 — Integrate FrontierPicker into new-instance flow
-
-### Iteration 4 — 2026-03-17
-- **Task:** T-049 — Integrate FrontierPicker into new-instance flow
-- **Tier:** 6
-- **Status:** DONE
-- **Files:** internal/tui/app.go (frontierPicker field, discoverFrontierItems, launchFrontiers, ActionToggleSelect, picker overlay rendering), internal/tui/keyhandler.go (ActionToggleSelect, space key), internal/tui/overlay.go (OverlayFrontierPicker)
-- **Validation:** Build P, Tests P, Acceptance: 'n' shows picker P, navigate j/k P, space multi-select P, enter launches P, esc cancels P, done strikethrough P
-- **Next:** T-050 — Validate persistence on load
-
-### Iteration 5 — 2026-03-17
-- **Task:** T-050 (validate persistence) + T-053 (instance list branch/diff stats) + T-055 (context-adaptive menu)
-- **Tier:** 6
-- **Status:** DONE
-- **Files:** internal/session/instance.go (BranchName, DiffAdded, DiffRemoved fields), internal/tui/instancelist.go (renderRow shows branch+diff), internal/tui/menu.go (OverlayMenu, NoSelectionMenu), internal/tui/app.go (onTick updates diff stats and menu)
-- **Validation:** Build P, Tests P, Acceptance: persistence validates tmux P, instance list shows branch+diff P, menu adapts to overlay/no-selection/default P
-- **Note:** T-050 was already implemented in Run() during iteration 1. Marking done. All 14 Tier 6 tasks now complete.
+- **Files:** scripts/setup-build.sh
+- **Validation:** Build P, Tests P (syntax check), Acceptance: merge on existing worktree P, first-time creation unchanged P
+- **Next:** T-005 — Handle merge conflicts with user notification and options
