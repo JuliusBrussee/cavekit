@@ -37,4 +37,12 @@
 - **Status:** DONE
 - **Files:** scripts/setup-build.sh
 - **Validation:** Build P, Tests P (syntax), Acceptance: recovery detection with state display P, --abandon flag P, resume re-runs merge+env P
-- **Next:** T-014 — Update blueprint-overview.md after revision
+- **Next:** T-014, T-015, T-016, T-017, T-018
+
+### Iteration 6 — 2026-03-20
+- **Task:** T-014 (overview update), T-015 (drift detection), T-016 (health check), T-017 (TUI health display), T-018 (archive on stop)
+- **Tier:** 2
+- **Status:** DONE
+- **Files:** commands/revise.md, scripts/setup-build.sh, internal/session/instance.go, internal/session/lifecycle.go, internal/tui/instancelist.go
+- **Validation:** Build P, Tests P (all pass), Acceptance: overview update instructions P, drift detection report P, health check with warnings/errors P, TUI health indicators P, archive on kill P, skip archive on zero progress P
+- **Next:** All tiers complete

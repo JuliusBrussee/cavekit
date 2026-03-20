@@ -225,6 +225,64 @@ if [[ "$IS_WORKTREE" == "false" ]]; then
     echo "🔗 Forwarded $ENV_FORWARDED .env* file(s) to worktree via symlinks"
   fi
 
+  # ─── Worktree health check (R4: Worktree Health Check) ──────────────────
+  HEALTH_WARNINGS=0
+  HEALTH_ERRORS=0
+
+  # Error: worktree path doesn't exist (shouldn't happen here, but defensive)
+  if [[ ! -d "$WT_PATH" ]]; then
+    echo "❌ HEALTH ERROR: Worktree path does not exist: $WT_PATH" >&2
+    HEALTH_ERRORS=$((HEALTH_ERRORS + 1))
+  fi
+
+  # Error: detached HEAD
+  WT_HEAD=$(cd "$WT_PATH" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+  if [[ "$WT_HEAD" == "HEAD" ]]; then
+    echo "❌ HEALTH ERROR: Worktree is in detached HEAD state" >&2
+    HEALTH_ERRORS=$((HEALTH_ERRORS + 1))
+  fi
+
+  # Error: branch deleted
+  if [[ -n "$WT_HEAD" ]] && [[ "$WT_HEAD" != "HEAD" ]]; then
+    if ! git rev-parse --verify "$WT_HEAD" &>/dev/null 2>&1; then
+      echo "❌ HEALTH ERROR: Branch '$WT_HEAD' no longer exists" >&2
+      HEALTH_ERRORS=$((HEALTH_ERRORS + 1))
+    fi
+  fi
+
+  # Warning: uncommitted changes
+  WT_STATUS=$(cd "$WT_PATH" && git status --porcelain 2>/dev/null || echo "")
+  if [[ -n "$WT_STATUS" ]]; then
+    WT_DIRTY_COUNT=$(echo "$WT_STATUS" | wc -l | tr -d ' ')
+    echo "⚠️  HEALTH WARNING: $WT_DIRTY_COUNT uncommitted change(s) in worktree" >&2
+    HEALTH_WARNINGS=$((HEALTH_WARNINGS + 1))
+  fi
+
+  # Warning: env files missing (check if project root has env files but worktree doesn't)
+  for env_file in "$PROJECT_ROOT"/.env*; do
+    [[ -f "$env_file" ]] || continue
+    env_basename="$(basename "$env_file")"
+    if [[ ! -e "$WT_PATH/$env_basename" ]]; then
+      echo "⚠️  HEALTH WARNING: $env_basename missing from worktree" >&2
+      HEALTH_WARNINGS=$((HEALTH_WARNINGS + 1))
+    fi
+  done
+
+  # Write health check results for TUI consumption
+  mkdir -p "$WT_PATH/.claude"
+  cat > "$WT_PATH/.claude/health-check.json" <<HEALTH_EOF
+{"timestamp":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","errors":$HEALTH_ERRORS,"warnings":$HEALTH_WARNINGS,"branch":"$WT_HEAD","status":"$(if [[ $HEALTH_ERRORS -gt 0 ]]; then echo "error"; elif [[ $HEALTH_WARNINGS -gt 0 ]]; then echo "warning"; else echo "healthy"; fi)"}
+HEALTH_EOF
+
+  if [[ $HEALTH_ERRORS -gt 0 ]]; then
+    echo "❌ Health check failed with $HEALTH_ERRORS error(s). Build cannot proceed." >&2
+    exit 1
+  elif [[ $HEALTH_WARNINGS -gt 0 ]]; then
+    echo "⚠️  Health check passed with $HEALTH_WARNINGS warning(s)"
+  else
+    echo "✅ Health check passed"
+  fi
+
   # Switch to the worktree
   cd "$WT_PATH"
   echo "📂 Working in: $(pwd)"

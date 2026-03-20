@@ -13,3 +13,6 @@ last_edited: "2026-03-20T00:00:00Z"
 | T-011 | DONE | Recovery detection on build start (surfaces branch, last commit, diff stats). Resume proceeds through merge+env. --abandon flag for cleanup. |
 | T-012 | DONE | --abandon flag removes worktree (force), prunes, deletes branch |
 | T-013 | DONE | Resume flow cleans stale ralph-loop state then proceeds through normal merge (R1) + env verify (R2) path |
+| T-016 | DONE | Health check in setup-build.sh: detached HEAD (error), missing worktree (error), uncommitted changes (warning), missing env files (warning). Results written to .claude/health-check.json |
+| T-017 | DONE | Health status/errors/warnings fields added to Instance struct; TUI instance list shows ⊘ (error) or △ (warning) indicator |
+| T-018 | DONE | archiveImplState() in lifecycle.go copies loop-log and impl-* files to archive/ on kill. Skips if zero tasks completed |

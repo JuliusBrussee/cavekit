@@ -97,6 +97,36 @@ Changelog rules:
 - Add to the "Dead Ends & Failed Approaches" section if the fix replaced a failed approach
 - Update test health if new tests were added
 
+## Step 4b: Update Blueprint Overview (R3: Overview Consistency)
+
+After updating individual blueprints, update `context/blueprints/blueprint-overview.md`:
+
+1. **Requirement counts** — Re-count requirements in each updated blueprint and update the Domain Index table
+2. **Domain descriptions** — If a blueprint's `## Scope` changed, update the overview's description column to match
+3. **Cross-reference map** — If cross-references were added/removed/changed, update the map
+4. **Frontmatter** — Update `last_edited` on the overview and all modified blueprint files
+
+Only update the overview if individual blueprints were actually modified. If no blueprints changed, skip this step.
+
+## Step 4c: Detect Build Site Drift (R4: Drift Detection)
+
+After updating blueprints, scan the build site(s) in `context/sites/` and report any drift:
+
+1. **Stale tasks** — Tasks whose parent requirement text no longer matches the blueprint (show old vs new)
+2. **Orphaned tasks** — Tasks whose parent requirement was removed entirely
+3. **Out-of-date tasks** — Tasks whose acceptance criteria changed in the blueprint
+
+Output a drift report:
+
+```markdown
+### Build Site Drift
+| Task | Build Site | Issue | Old | New |
+|------|------------|-------|-----|-----|
+| T-{n} | {site file} | stale/orphaned/out-of-date | {old text} | {new text} |
+```
+
+**Do NOT auto-modify the build site.** Only report drift. The user or architect decides whether to regenerate affected sections.
+
 ## Step 5: Run Tests
 
 Run the project's test suite to verify that:

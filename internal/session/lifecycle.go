@@ -3,6 +3,8 @@ package session
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/julb/blueprint-monitor/internal/tmux"
@@ -83,6 +85,11 @@ func (m *Manager) Kill(ctx context.Context, inst *Instance, projectRoot string, 
 		// Non-fatal: session might already be gone
 	}
 
+	// Archive impl state before worktree removal (R5: Archive on Stop)
+	if inst.WorktreePath != "" {
+		archiveImplState(inst.WorktreePath, inst.TasksDone)
+	}
+
 	if removeWorktree && inst.WorktreePath != "" {
 		// Derive site name from worktree path
 		siteName := deriveSiteNameFromWorktree(inst.WorktreePath, projectRoot)
@@ -93,6 +100,45 @@ func (m *Manager) Kill(ctx context.Context, inst *Instance, projectRoot string, 
 
 	inst.Status = StatusDone
 	return nil
+}
+
+// archiveImplState copies loop log and impl files to an archive directory
+// before a build session is torn down. Skips if no tasks were completed.
+func archiveImplState(wtPath string, tasksDone int) {
+	if tasksDone == 0 {
+		return
+	}
+
+	implDir := filepath.Join(wtPath, "context", "impl")
+	if _, err := os.Stat(implDir); os.IsNotExist(err) {
+		return
+	}
+
+	archiveDir := filepath.Join(implDir, "archive", time.Now().UTC().Format("20060102-150405"))
+	if err := os.MkdirAll(archiveDir, 0o755); err != nil {
+		return
+	}
+
+	// Archive loop log
+	loopLog := filepath.Join(implDir, "loop-log.md")
+	if data, err := os.ReadFile(loopLog); err == nil {
+		os.WriteFile(filepath.Join(archiveDir, "loop-log.md"), data, 0o644)
+	}
+
+	// Archive impl tracking files
+	entries, err := os.ReadDir(implDir)
+	if err != nil {
+		return
+	}
+	for _, entry := range entries {
+		name := entry.Name()
+		if !entry.IsDir() && len(name) > 5 && name[:5] == "impl-" {
+			data, err := os.ReadFile(filepath.Join(implDir, name))
+			if err == nil {
+				os.WriteFile(filepath.Join(archiveDir, name), data, 0o644)
+			}
+		}
+	}
 }
 
 func deriveSiteNameFromWorktree(wtPath, projectRoot string) string {

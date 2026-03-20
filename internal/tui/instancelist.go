@@ -142,7 +142,18 @@ func (l *InstanceList) renderRow(inst *session.Instance, selected bool) string {
 		branchStr = inst.BranchName
 	}
 
+	// Health indicator
+	healthStr := ""
+	if inst.HealthStatus == "error" {
+		healthStr = lipgloss.NewStyle().Foreground(ColorDanger).Render("⊘")
+	} else if inst.HealthStatus == "warning" {
+		healthStr = lipgloss.NewStyle().Foreground(ColorWarning).Render("△")
+	}
+
 	line2Parts := " " + bar
+	if healthStr != "" {
+		line2Parts += "  " + healthStr
+	}
 	if diffStr != "" {
 		line2Parts += "  " + diffStr
 	}

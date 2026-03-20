@@ -70,6 +70,11 @@ type Instance struct {
 	BranchName  string `json:"branch_name"`
 	DiffAdded   int    `json:"diff_added"`
 	DiffRemoved int    `json:"diff_removed"`
+
+	// Health check state (from .claude/health-check.json in worktree).
+	HealthStatus   string `json:"health_status"`    // "healthy", "warning", "error"
+	HealthErrors   int    `json:"health_errors"`
+	HealthWarnings int    `json:"health_warnings"`
 }
 
 // NewInstance creates a new instance with default values.
