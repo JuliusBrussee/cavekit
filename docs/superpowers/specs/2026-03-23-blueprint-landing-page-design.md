@@ -8,7 +8,7 @@ A static, single-page landing site for the Blueprint Claude Code plugin, deploye
 
 **Tech stack:** Pure HTML/CSS/JS in a single `index.html`. Zero dependencies, zero build step. SVG animations driven by CSS `@keyframes` + `stroke-dashoffset`. Scroll triggers via `IntersectionObserver`. Deployed by pushing to the `gh-pages` branch.
 
-**Repo location:** `index.html` at the root of `sdd-os` (or a dedicated `docs/` folder configured for GitHub Pages).
+**Repo location:** Deployed from a dedicated `gh-pages` branch with `index.html` at branch root. The `main` branch is not affected — GitHub Pages is configured to serve from the `gh-pages` branch.
 
 ---
 
@@ -19,14 +19,15 @@ A static, single-page landing site for the Blueprint Claude Code plugin, deploye
 | Token | Value | Usage |
 |-------|-------|-------|
 | `--bg` | `#0f1a2e` | Page background |
-| `--grid-fine` | `rgba(74,158,255,0.05)` | Fine grid lines (16px) |
+| `--grid-fine` | `rgba(74,158,255,0.08)` | Fine grid lines (16px) |
 | `--grid-major` | `rgba(74,158,255,0.12)` | Major grid lines (80px) |
 | `--blueprint` | `#4a9eff` | Primary accent — lines, borders, text |
-| `--blueprint-dim` | `rgba(74,158,255,0.4)` | Annotations, labels, secondary elements |
+| `--blueprint-dim` | `rgba(74,158,255,0.7)` | Annotation text, section labels |
+| `--blueprint-decoration` | `rgba(74,158,255,0.3)` | Non-text decorations: divider lines, dimension lines |
 | `--blueprint-fill` | `rgba(74,158,255,0.06)` | Box fills, subtle backgrounds |
 | `--text-primary` | `#e8edf3` | Headings, primary copy |
-| `--text-secondary` | `rgba(200,215,235,0.5)` | Body text, descriptions |
-| `--red-diagnostic` | `rgba(255,100,100,0.7)` | Problem section accents |
+| `--text-secondary` | `rgba(200,215,235,0.65)` | Body text, descriptions |
+| `--red-diagnostic` | `#ff6464` | Problem section card text and bar fills |
 | `--green-pass` | `#00ff88` | Success/commit indicators |
 
 ### Typography
@@ -46,9 +47,9 @@ Both are CSS `background-image` linear gradients on the `<body>`.
 
 ### Global Decorations
 
-- Section dividers are subtle horizontal lines in `--blueprint-dim`
-- Each section has a top-left annotation: `SECTION 0N — TITLE` in monospace, dim
-- Dimension lines (thin lines with perpendicular end-caps) appear as SVG decorations in margins where space allows
+- Section dividers are subtle horizontal lines in `--blueprint-decoration`
+- Each section has a top-left annotation in monospace `--blueprint-dim`: `SECTION 01 — HERO`, `SECTION 02 — THE PROBLEM`, `SECTION 03 — HOW IT WORKS`, `SECTION 04 — THE RALPH LOOP`, `SECTION 05 — GET STARTED`
+- Dimension lines (thin lines with perpendicular end-caps) appear as SVG decorations in `--blueprint-decoration` in margins where space allows
 
 ---
 
@@ -62,7 +63,7 @@ Both are CSS `background-image` linear gradients on the `<body>`.
 - Title: "Blueprint" in large heading type
 - Subtitle: "Specification-driven development for AI coding agents"
 - The DABI pipeline schematic (primary SVG diagram — see below)
-- CTA: monospace install command in a bordered box (`git clone ... && ./install.sh`)
+- CTA: monospace install command in a bordered box (`git clone https://github.com/JuliusBrussee/blueprint.git ~/.blueprint && cd ~/.blueprint && ./install.sh`)
 - Secondary link: "View on GitHub"
 
 **DABI Pipeline Schematic (Hero SVG):**
@@ -146,11 +147,11 @@ A "FAIL → fix → retry" branch off the VALIDATE node.
 
 Below the diagram: "Each iteration validates against the blueprint. The loop runs until all tasks pass or the iteration limit is reached."
 
-Optional: a small counter animation showing "Iteration 1... 2... 3... 18 — COMPLETE" to convey the iterative nature.
+Below the explanatory text: a counter animation in monospace `--blueprint-dim`, centered, showing "Iteration 1... 2... 3... 18 — COMPLETE". Counts from 1 to 18 at 150ms intervals, pauses 500ms on "COMPLETE", then loops.
 
 **Animation (on scroll into view):**
 - The elliptical loop path draws itself
-- A glowing particle (small circle with box-shadow glow) continuously traces the loop path using CSS `offset-path` or SVG `animateMotion`
+- A glowing particle (small circle with box-shadow glow) continuously traces the loop path using SVG `<animateMotion>`
 - Each node pulses (opacity/scale) as the particle passes through it
 - The COMMIT node briefly flashes green when the particle passes
 
@@ -218,7 +219,7 @@ The install section uses a JS-driven typewriter. On `.visible`, a function itera
 
 - All animations use `transform` and `opacity` only (GPU-composited, no layout thrashing)
 - SVG animations use `stroke-dashoffset` (also compositable)
-- The orbiting particle in the Ralph Loop uses `offset-path` where supported, falling back to CSS keyframe waypoints
+- The orbiting particle in the Ralph Loop uses SVG `<animateMotion>` along the elliptical path (universal browser support, no fallback needed)
 - No animation libraries. Total JS: IntersectionObserver setup + typewriter function (~50 lines)
 - Reduced motion: `@media (prefers-reduced-motion: reduce)` disables all animations, shows all content immediately
 
@@ -234,20 +235,28 @@ The install section uses a JS-driven typewriter. On `.visible`, a function itera
 - Ralph Loop: full-size elliptical diagram
 
 ### Mobile (<768px)
-- Hero SVG: simplified or horizontally scrollable
-- Problem cards: single column stack
-- DABI cards: 2x2 grid or vertical stack with downward arrows
-- Ralph Loop: scaled down, may switch to vertical flow
-- Terminal: font-size reduced, horizontal scroll if needed
+- Hero SVG: horizontally scrollable in an `overflow-x: auto` container with `-webkit-overflow-scrolling: touch`
+- Problem cards: single column stack (1x4)
+- DABI cards: vertical stack with downward arrows (`↓`) replacing horizontal arrows
+- Ralph Loop: scales down proportionally via `viewBox` (no layout change — SVG handles it)
+- Terminal: `font-size: 11px`, `overflow-x: auto` with horizontal scroll for long commands
 
 ---
 
 ## Deployment
 
-- Single `index.html` file at repo root (or `/docs` if configured)
-- GitHub Pages serves from `gh-pages` branch or `/docs` on `main`
-- No build step — push and deploy
-- Custom domain optional (can add CNAME file later)
+- Single `index.html` on the `gh-pages` branch (branch root)
+- GitHub Pages configured to serve from `gh-pages` branch
+- The `main` branch is unaffected — landing page lives only on `gh-pages`
+- No build step — push `index.html` to `gh-pages` and it's live
+- Custom domain optional (add a `CNAME` file to `gh-pages` branch root)
+
+### Footer
+
+A minimal footer at the bottom of the page:
+- "Blueprint — MIT License" in `--text-secondary`
+- "Built by Julius Brussee" link to GitHub profile
+- Styled in monospace, small size, centered
 
 ---
 
@@ -255,7 +264,7 @@ The install section uses a JS-driven typewriter. On `.visible`, a function itera
 
 - All SVG diagrams have `role="img"` and `aria-label` descriptions
 - `@media (prefers-reduced-motion: reduce)` shows all content without animation
-- Color contrast: primary text on navy background exceeds 4.5:1
+- Color contrast: all text tokens (`--text-primary`, `--text-secondary`, `--blueprint`, `--blueprint-dim`, `--red-diagnostic`) meet WCAG AA 4.5:1 against `--bg`. Decorative-only elements (`--blueprint-decoration`, `--grid-fine`, `--grid-major`) are exempt.
 - Semantic HTML: `<header>`, `<section>`, `<footer>` with `aria-labelledby`
 - Keyboard-navigable links and buttons with visible focus indicators
 - Typewriter text has a `<noscript>` fallback showing the full command immediately
