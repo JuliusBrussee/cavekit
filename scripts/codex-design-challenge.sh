@@ -257,6 +257,69 @@ bp_design_challenge() {
   return 0
 }
 
+# ── T-304: Advisory Findings Collector ─────────────────────────────────
+# Formats findings for user-facing presentation in the draft flow.
+# Separates critical (for auto-fix) from advisory (for user review).
+#
+# Input: findings from bp_parse_challenge_findings (pipe-delimited lines)
+# Sets:
+#   _BP_CHALLENGE_CRITICAL_FINDINGS  — newline-separated critical findings
+#   _BP_CHALLENGE_ADVISORY_FINDINGS  — newline-separated advisory findings
+
+bp_collect_challenge_findings() {
+  local findings="${1:-$(cat)}"
+
+  _BP_CHALLENGE_CRITICAL_FINDINGS=""
+  _BP_CHALLENGE_ADVISORY_FINDINGS=""
+
+  while IFS='|' read -r cat sev bp req desc; do
+    [[ -z "$cat" ]] && continue
+    local entry="${cat}|${sev}|${bp}|${req}|${desc}"
+    case "$sev" in
+      critical) _BP_CHALLENGE_CRITICAL_FINDINGS+="${entry}"$'\n' ;;
+      *)        _BP_CHALLENGE_ADVISORY_FINDINGS+="${entry}"$'\n' ;;
+    esac
+  done <<< "$findings"
+}
+
+# Format advisory findings as a markdown block for user review gate.
+# Call after bp_collect_challenge_findings.
+# Output: markdown text suitable for display in the draft flow.
+
+bp_format_advisory_for_user() {
+  if [[ -z "$_BP_CHALLENGE_ADVISORY_FINDINGS" ]]; then
+    echo "No advisory findings from Codex design challenge."
+    return 0
+  fi
+
+  echo "### Codex Design Challenge — Advisory Findings"
+  echo ""
+  echo "These findings are informational — Codex flagged them as worth considering but not blocking."
+  echo ""
+  echo "| Category | Blueprint | Requirement | Finding |"
+  echo "|----------|-----------|-------------|---------|"
+
+  while IFS='|' read -r cat sev bp req desc; do
+    [[ -z "$cat" ]] && continue
+    echo "| $cat | $bp | $req | $desc |"
+  done <<< "$_BP_CHALLENGE_ADVISORY_FINDINGS"
+}
+
+# Format critical findings for auto-fix processing.
+# Call after bp_collect_challenge_findings.
+# Output: one finding per line in format: BLUEPRINT|REQUIREMENT|CATEGORY|DESCRIPTION
+
+bp_format_critical_for_fix() {
+  if [[ -z "$_BP_CHALLENGE_CRITICAL_FINDINGS" ]]; then
+    return 0
+  fi
+
+  while IFS='|' read -r cat sev bp req desc; do
+    [[ -z "$cat" ]] && continue
+    echo "${bp}|${req}|${cat}|${desc}"
+  done <<< "$_BP_CHALLENGE_CRITICAL_FINDINGS"
+}
+
 # ── Helpers ───────────────────────────────────────────────────────────
 
 _design_challenge_usage() {
