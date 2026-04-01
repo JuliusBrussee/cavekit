@@ -12,16 +12,16 @@ Build site: context/plans/build-site.md
 | T-002 | DONE | Hero section: title, pipeline SVG, particle animation, install block, copy button. |
 | T-003 | DONE | Problem section: 4 diagnostic cards with severity bars. |
 | T-004 | DONE | How It Works: 4 DABI phase cards. |
-| T-005 | NOT STARTED | Adversarial Review: 3 review cards with mini diagrams. Missing from current index.html. |
+| T-005 | DONE | Adversarial Review: 3 stacked cards (Design Challenge, Tier Gate, Command Safety) with badges, mini diagrams, stagger animation. |
 | T-006 | DONE | Ralph Loop: elliptical SVG, orbiting particle, metrics. |
-| T-007 | NOT STARTED | Parallel Execution: wave visualization with task cards. Missing from current index.html. |
+| T-007 | DONE | Parallel Execution: Wave 1 (3 cards) → arrows → Wave 2 (2 cards) → BUILD COMPLETE badge. Circuit breaker note. |
 | T-008 | DONE | Get Started + Footer: terminal, typewriter, CTAs, footer. |
-| T-009 | NOT STARTED | Docs page foundation: shared identity, layout, top bar. No docs.html exists yet. |
-| T-010 | NOT STARTED | Docs left sidebar: nav tree, filter, collapsible sections, scrollspy. |
-| T-011 | NOT STARTED | Docs right sidebar: "On this page" TOC + content styling system. |
-| T-012 | NOT STARTED | Docs content: Overview + Quick Start. |
-| T-013 | NOT STARTED | Docs content: Commands reference (all 10 commands). |
-| T-014 | NOT STARTED | Docs content: Methodology (DABI, source of truth, scientific method). |
+| T-009 | DONE | Docs page foundation: docs.html with shared design system, 3-column layout, top bar, placeholder sections, nav tree, content styling CSS. |
+| T-010 | DONE | Docs left sidebar: collapsible nav tree, filter input, scrollspy with blue accent, smooth-scroll, URL hash deep linking. |
+| T-011 | DONE | Docs right sidebar: dynamic H3 TOC, scrollspy highlighting, content styling (heading borders, code blocks, tables, inline code pills). |
+| T-012 | DONE | Docs content: Overview (what Blueprint is, DABI summary with links) + Quick Start (Greenfield + Brownfield annotated examples). |
+| T-013 | DONE | Docs content: All 10 commands in command-card format with phase badges, usage examples, flags tables, related links. |
+| T-014 | DONE | Docs content: DABI Lifecycle walkthrough, Blueprints as Source of Truth, Scientific Method Applied mapping. |
 | T-015 | NOT STARTED | Docs content: Codex Integration (5 subsections). |
 | T-016 | NOT STARTED | Docs content: Skills Reference + Configuration. |
 | T-017 | NOT STARTED | Landing page polish: responsive, a11y, perf audit. |
