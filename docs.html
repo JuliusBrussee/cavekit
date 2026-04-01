@@ -1095,95 +1095,328 @@ Commands:
       <!-- Codex Integration -->
       <section id="codex-integration">
         <h2>Codex Integration</h2>
+        <p>Blueprint uses <a href="https://github.com/openai/codex">Codex</a> (OpenAI's coding agent) as an adversarial reviewer — a second model with a fundamentally different perspective that catches blind spots Claude cannot see in its own output. This dual-model approach operates at three levels: design, build, and command safety.</p>
+
         <section id="design-challenge">
           <h3>Design Challenge</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <p><strong>What it does:</strong> An adversarial review of your blueprints focused exclusively on architecture-level concerns. A second model challenges the design before any code is written.</p>
+          <p><strong>When it triggers:</strong> Automatically after Claude drafts blueprints and the internal reviewer approves them during <a href="#cmd-draft">/bp:draft</a>.</p>
+          <p><strong>How it works:</strong> The entire blueprint set is sent to Codex for a design challenge. Codex checks for domain decomposition quality, missing requirements, ambiguous acceptance criteria, implicit assumptions, and cross-domain coherence.</p>
+          <pre><code><span class="cmt"># Flow: draft &rarr; internal review &rarr; Codex challenge &rarr; user review</span>
+<span class="out">Claude drafts blueprints
+  &rarr; Blueprint reviewer approves
+  &rarr; Codex challenges the design
+  &rarr; User reviews blueprints + findings</span></code></pre>
+          <p>Codex returns structured findings categorized as <strong>critical</strong> (must fix before building) or <strong>advisory</strong> (worth considering). Critical findings trigger an auto-fix loop — Claude addresses them, Codex re-challenges, up to 2 cycles. Advisory findings are presented alongside blueprints at the user review gate.</p>
+          <p>The design challenge is purpose-built to prohibit implementation feedback. No framework suggestions, no file path opinions — only design-level concerns that would cause real problems during the build phase.</p>
+          <p><strong>Configuration:</strong> Controlled by the <a href="#settings-reference"><code>codex_review</code></a> setting. Set to <code>off</code> to skip design challenges.</p>
         </section>
+
         <section id="tier-gate">
           <h3>Tier Gate</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <p><strong>What it does:</strong> A severity-based code review gate that blocks tier advancement when critical defects are found. Codex reviews the diff of every completed tier during <a href="#cmd-build">/bp:build</a>.</p>
+          <p><strong>When it triggers:</strong> Automatically at every tier boundary during the build loop — after all tasks in a tier complete and before the next tier starts.</p>
+          <p><strong>How it works:</strong> Codex reviews the combined diff of all tasks completed in the tier. Each finding is classified by severity:</p>
+          <div class="table-wrap">
+            <table>
+              <tr><th>Severity</th><th>Behavior</th></tr>
+              <tr><td><code>P0</code> (critical)</td><td>Blocks tier advancement. Fix task generated automatically.</td></tr>
+              <tr><td><code>P1</code> (high)</td><td>Blocks tier advancement. Fix task generated automatically.</td></tr>
+              <tr><td><code>P2</code> (medium)</td><td>Deferred. Logged but does not block.</td></tr>
+              <tr><td><code>P3</code> (low)</td><td>Deferred. Logged but does not block.</td></tr>
+            </table>
+          </div>
+          <pre><code><span class="out">═══ Tier 0 Complete ═══</span>
+<span class="out">Codex reviews diff (T-001, T-002, T-003) ...</span>
+<span class="out">Review: 2 findings (1 P0, 1 P3)</span>
+<span class="err">Gate: BLOCKED &rarr; fix cycle 1/2</span>
+<span class="out">Fixing P0: nil pointer in auth middleware ...</span>
+<span class="out">Re-review ...</span>
+<span class="out">Gate: PROCEED</span>
+<span class="out">═══ Tier 1 starting ═══</span></code></pre>
+          <p>The review-fix cycle runs up to 2 iterations per tier. After that, the build advances with a warning — the system never deadlocks.</p>
+          <p><strong>Gate modes</strong> are configurable via the <a href="#settings-reference"><code>tier_gate_mode</code></a> setting:</p>
+          <div class="table-wrap">
+            <table>
+              <tr><th>Mode</th><th>Behavior</th></tr>
+              <tr><td><code>severity</code> (default)</td><td>P0/P1 findings block advancement; P2/P3 are logged only</td></tr>
+              <tr><td><code>strict</code></td><td>All findings block advancement</td></tr>
+              <tr><td><code>permissive</code></td><td>Nothing blocks — all findings are logged only</td></tr>
+              <tr><td><code>off</code></td><td>Tier gate disabled entirely</td></tr>
+            </table>
+          </div>
         </section>
+
         <section id="speculative-review">
           <h3>Speculative Review</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <p><strong>What it does:</strong> Runs the Codex tier review in the background while Claude builds the current tier, eliminating gate latency.</p>
+          <p><strong>When it triggers:</strong> Automatically when a tier completes and <a href="#settings-reference"><code>speculative_review</code></a> is <code>on</code> (the default).</p>
+          <p><strong>How it works:</strong> When a tier finishes, Blueprint starts the Codex review in a background process. Meanwhile, Claude begins building the next tier immediately. When that next tier finishes and the gate checks for the previous tier's review, the results are already available — cutting tier gate latency to near-zero.</p>
+          <pre><code><span class="cmt"># Speculative review timeline</span>
+<span class="out">Tier 0 complete ──────────────────────► Tier 1 complete</span>
+<span class="out">     │                                       │</span>
+<span class="out">     └── Codex reviews Tier 0 (background) ──►│</span>
+<span class="out">                                              │</span>
+<span class="out">                         Results ready ◄──────┘</span>
+<span class="out">                         before gate runs</span></code></pre>
+          <p>If the background review is not done when the gate runs, the system waits up to the configured timeout (<code>speculative_review_timeout</code>, default 300 seconds) and then falls back to a synchronous review.</p>
+          <p><strong>Configuration:</strong> Toggle with <a href="#settings-reference"><code>speculative_review</code></a> (<code>on</code>/<code>off</code>). Adjust wait time with <a href="#settings-reference"><code>speculative_review_timeout</code></a>.</p>
         </section>
+
         <section id="command-safety-gate">
           <h3>Command Safety Gate</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <p><strong>What it does:</strong> A PreToolUse hook that intercepts every Bash command before execution and classifies its safety, preventing destructive operations.</p>
+          <p><strong>When it triggers:</strong> On every Bash command execution during a Blueprint session (configurable via <a href="#settings-reference"><code>command_gate</code></a>).</p>
+          <p><strong>How it works:</strong> Commands are checked through a three-stage pipeline:</p>
+          <pre><code><span class="cmt"># Command safety pipeline</span>
+<span class="out">Agent runs bash command</span>
+<span class="out">     │</span>
+<span class="out">     ▼</span>
+<span class="out">Fast-path check ──► allowlist (50+ safe commands) &rarr; approve</span>
+<span class="out">     │           └► blocklist (rm -rf, force push, ...) &rarr; block</span>
+<span class="out">     │</span>
+<span class="out">     ▼ (ambiguous)</span>
+<span class="out">Codex classifies ──► safe &rarr; approve</span>
+<span class="out">     │            └► warn &rarr; approve + log</span>
+<span class="out">     │            └► block &rarr; prevent execution</span>
+<span class="out">     │</span>
+<span class="out">     ▼ (cached)</span>
+<span class="out">Verdict cache ──► normalized pattern match &rarr; reuse verdict</span></code></pre>
+          <p>The gate integrates with Claude Code's permission system — commands already allowed or blocked in settings bypass the gate entirely. Verdicts are cached by normalized command pattern within the session to avoid redundant API calls.</p>
+          <p><strong>Configuration:</strong> Set <a href="#settings-reference"><code>command_gate</code></a> to <code>all</code> (default), <code>interactive</code>, or <code>off</code>. Adjust Codex classification timeout with <a href="#settings-reference"><code>command_gate_timeout</code></a> (default 3000ms).</p>
         </section>
+
         <section id="graceful-degradation">
           <h3>Graceful Degradation</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <p><strong>What it does:</strong> Ensures Blueprint works fully without Codex installed. All Codex features are additive — they enhance the system but are never required.</p>
+          <p><strong>When it triggers:</strong> Automatically when Codex is not detected on the system.</p>
+          <p><strong>How it works:</strong> When Codex is not installed, the following behavior changes apply:</p>
+          <div class="table-wrap">
+            <table>
+              <tr><th>Feature</th><th>Behavior Without Codex</th></tr>
+              <tr><td>Design Challenge</td><td>Skipped — the internal blueprint reviewer still runs</td></tr>
+              <tr><td>Tier Gate</td><td>Skipped — the build loop proceeds without review pauses</td></tr>
+              <tr><td>Command Gate</td><td>Falls back to static allowlist/blocklist only (no Codex classification)</td></tr>
+              <tr><td>Install Nudge</td><td>A one-time tip appears: <code>Tip: Install Codex for adversarial code review</code></td></tr>
+            </table>
+          </div>
+          <p>Blueprint works the same as before Codex integration was added. Codex makes it harder to ship bad blueprints and bad code, but the core DABI lifecycle is fully functional without it.</p>
         </section>
       </section>
 
       <!-- Skills Reference -->
       <section id="skills-reference">
         <h2>Skills Reference</h2>
+        <p>Blueprint ships with 13 deep-dive skills covering the full methodology. Each skill is a focused knowledge module that teaches a specific aspect of specification-driven development.</p>
+
         <section id="skill-blueprint-writing">
           <h3>Blueprint Writing</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <div class="command-card">
+            <p>How to write blueprints that AI agents can consume effectively. Covers implementation-agnostic blueprint design, testable acceptance criteria, and R-numbered requirement structure.</p>
+            <p><strong>Use when:</strong> Starting a new project or adding a major feature. Any time you need to define what to build before building it.</p>
+          </div>
         </section>
+
         <section id="skill-convergence-monitoring">
           <h3>Convergence Monitoring</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <div class="command-card">
+            <p>Detecting when agent iterations are converging toward a stable solution or hitting a ceiling. Covers convergence signals, ceiling detection, and non-convergence remediation.</p>
+            <p><strong>Use when:</strong> The build loop is running many iterations without completing, or you suspect the agent is stuck in a fix-break cycle.</p>
+          </div>
         </section>
+
         <section id="skill-peer-review">
           <h3>Peer Review</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <div class="command-card">
+            <p>Six modes for using a second AI agent or model to challenge the primary builder agent's work. Covers Diff Critique, Design Challenge, Threshold Review, and more.</p>
+            <p><strong>Use when:</strong> You want cross-model review of code or specifications, or need to set up adversarial review patterns beyond the built-in Codex integration.</p>
+          </div>
         </section>
+
         <section id="skill-validation-first">
           <h3>Validation-First Design</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <div class="command-card">
+            <p>Every requirement must be automatically verifiable. Covers the 6-gate validation pipeline, phase gates, and how to write acceptance criteria that agents can test.</p>
+            <p><strong>Use when:</strong> Writing acceptance criteria for blueprints, designing test strategies, or ensuring that every requirement has a clear pass/fail condition.</p>
+          </div>
         </section>
+
         <section id="skill-context-architecture">
           <h3>Context Architecture</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <div class="command-card">
+            <p>Progressive disclosure architecture for organizing project context as a DAG (directed acyclic graph). Agents enter at the root and traverse only the subgraph they need.</p>
+            <p><strong>Use when:</strong> Setting up a project's <code>context/</code> directory, organizing blueprints and implementation tracking, or debugging context loading issues.</p>
+          </div>
         </section>
+
         <section id="skill-revision">
           <h3>Revision</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <div class="command-card">
+            <p>Tracing bugs and manual fixes back to blueprints and prompts, then fixing at the source so the iteration loop can reproduce the fix automatically.</p>
+            <p><strong>Use when:</strong> You manually fixed a bug and want to update the blueprint so the same fix would be produced by the build loop in a clean run.</p>
+          </div>
         </section>
+
         <section id="skill-brownfield-adoption">
           <h3>Brownfield Adoption</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <div class="command-card">
+            <p>Step-by-step process for adopting Blueprint on an existing codebase. Covers the 6-step brownfield process, bootstrap prompt design, and spec validation against existing code.</p>
+            <p><strong>Use when:</strong> Adding Blueprint to a project that already has code. Use <code>/bp:draft --from-code</code> to reverse-engineer specifications from existing implementations.</p>
+          </div>
         </section>
+
         <section id="skill-speculative-pipeline">
           <h3>Speculative Pipeline</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <div class="command-card">
+            <p>A pipeline execution strategy where downstream stages start before upstream stages finish, using staggered timing with configurable delays. The leader begins work while the reviewer catches up.</p>
+            <p><strong>Use when:</strong> Optimizing build throughput, understanding how <a href="#speculative-review">speculative review</a> works, or designing custom overlapping phase pipelines.</p>
+          </div>
         </section>
+
         <section id="skill-prompt-pipeline">
           <h3>Prompt Pipeline</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <div class="command-card">
+            <p>How to design the numbered prompt pipeline that drives DABI phases. Covers greenfield 3-prompt patterns, rewrite 6-9 prompt patterns, and shared prompt architecture.</p>
+            <p><strong>Use when:</strong> Customizing the prompts that drive each Blueprint phase, or understanding how the internal prompt chain produces blueprints and build plans.</p>
+          </div>
         </section>
+
         <section id="skill-impl-tracking">
           <h3>Implementation Tracking</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <div class="command-card">
+            <p>Living records of what was built, what is pending, what failed, and what dead ends were explored. The lab notebook of the build process.</p>
+            <p><strong>Use when:</strong> Reviewing build progress, understanding why a task was marked BLOCKED, or resuming a build after interruption.</p>
+          </div>
         </section>
+
         <section id="skill-doc-inversion">
           <h3>Documentation Inversion</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <div class="command-card">
+            <p>Inverts the traditional documentation flow from code-to-wiki-for-humans (which rots) into code-to-CLAUDE.md-to-skills-for-agents (which stays current).</p>
+            <p><strong>Use when:</strong> Writing documentation that AI agents will consume, or converting existing human-facing docs into agent-optimized formats.</p>
+          </div>
         </section>
+
         <section id="skill-peer-review-loop">
           <h3>Peer Review Loop</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <div class="command-card">
+            <p>Combines the Ralph Loop with true cross-model peer review using Codex. Claude builds from specs; Codex reviews the output. Two models disagreeing is a signal. Two models agreeing is confidence.</p>
+            <p><strong>Use when:</strong> Running high-stakes builds where you want the strongest possible review coverage, or understanding how the <a href="#tier-gate">tier gate</a> review cycle works internally.</p>
+          </div>
         </section>
+
         <section id="skill-core-methodology">
           <h3>Core Methodology</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <div class="command-card">
+            <p>The full DABI lifecycle — the master skill that teaches the specification-driven development methodology and routes to all sub-skills. Covers the Specify Before Building principle and the scientific method applied to AI-assisted development.</p>
+            <p><strong>Use when:</strong> Learning Blueprint from scratch, onboarding a new team member, or needing a comprehensive overview of the entire methodology.</p>
+          </div>
         </section>
       </section>
 
       <!-- Configuration -->
       <section id="configuration">
         <h2>Configuration</h2>
+        <p>All Blueprint settings live in <code>.blueprint/config</code>. Most settings control the <a href="#codex-integration">Codex integration</a> layer.</p>
+
         <section id="settings-reference">
           <h3>Settings Reference</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <div class="table-wrap">
+            <table>
+              <tr>
+                <th>Setting</th>
+                <th>Values</th>
+                <th>Default</th>
+                <th>Purpose</th>
+              </tr>
+              <tr>
+                <td><code>codex_review</code></td>
+                <td><code>auto</code> <code>off</code></td>
+                <td><code>auto</code></td>
+                <td>Enable or disable Codex adversarial reviews (design challenge + tier gate)</td>
+              </tr>
+              <tr>
+                <td><code>codex_model</code></td>
+                <td>model string</td>
+                <td>(Codex default)</td>
+                <td>Which model Codex uses for review calls</td>
+              </tr>
+              <tr>
+                <td><code>tier_gate_mode</code></td>
+                <td><code>severity</code> <code>strict</code> <code>permissive</code> <code>off</code></td>
+                <td><code>severity</code></td>
+                <td>How findings gate tier advancement (see <a href="#tier-gate">Tier Gate</a>)</td>
+              </tr>
+              <tr>
+                <td><code>command_gate</code></td>
+                <td><code>all</code> <code>interactive</code> <code>off</code></td>
+                <td><code>all</code></td>
+                <td>Which sessions get command safety gating (see <a href="#command-safety-gate">Command Safety Gate</a>)</td>
+              </tr>
+              <tr>
+                <td><code>command_gate_timeout</code></td>
+                <td>milliseconds</td>
+                <td><code>3000</code></td>
+                <td>Timeout for Codex safety classification of ambiguous commands</td>
+              </tr>
+              <tr>
+                <td><code>speculative_review</code></td>
+                <td><code>on</code> <code>off</code></td>
+                <td><code>on</code></td>
+                <td>Run background review of previous tier while building current tier (see <a href="#speculative-review">Speculative Review</a>)</td>
+              </tr>
+              <tr>
+                <td><code>speculative_review_timeout</code></td>
+                <td>seconds</td>
+                <td><code>300</code></td>
+                <td>Maximum wait for speculative review results before falling back to synchronous</td>
+              </tr>
+            </table>
+          </div>
         </section>
+
         <section id="file-structure">
           <h3>File Structure</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <p>Blueprint organizes all project context under the <code>context/</code> directory. Each subdirectory serves a specific role in the DABI lifecycle:</p>
+          <pre><code><span class="out">context/</span>
+<span class="out">├── blueprints/               </span><span class="cmt"># Domain blueprints (persist across cycles)</span>
+<span class="out">│   ├── blueprint-overview.md</span>
+<span class="out">│   └── blueprint-{domain}.md</span>
+<span class="out">├── sites/                    </span><span class="cmt"># Build sites (one per plan)</span>
+<span class="out">│   ├── build-site-*.md</span>
+<span class="out">│   └── archive/</span>
+<span class="out">├── impl/                     </span><span class="cmt"># Implementation tracking</span>
+<span class="out">│   ├── impl-{domain}.md</span>
+<span class="out">│   ├── impl-review-findings.md   </span><span class="cmt"># Codex review findings ledger</span>
+<span class="out">│   ├── impl-speculative-log.md   </span><span class="cmt"># Speculative review timing data</span>
+<span class="out">│   ├── loop-log.md</span>
+<span class="out">│   └── archive/</span>
+<span class="out">└── refs/                     </span><span class="cmt"># Reference materials (PRDs, API docs)</span>
+<span class="out">    ├── research-brief-{topic}.md   </span><span class="cmt"># Synthesized research brief</span>
+<span class="out">    └── research-{topic}/           </span><span class="cmt"># Raw findings + findings board</span></code></pre>
+          <div class="table-wrap">
+            <table>
+              <tr><th>Directory</th><th>Purpose</th></tr>
+              <tr><td><code>context/blueprints/</code></td><td>Domain blueprints with R-numbered requirements and acceptance criteria. These are the source of truth for what to build.</td></tr>
+              <tr><td><code>context/sites/</code></td><td>Build sites generated by <a href="#cmd-architect">/bp:architect</a>. Each site is a tiered task dependency graph consumed by <a href="#cmd-build">/bp:build</a>.</td></tr>
+              <tr><td><code>context/impl/</code></td><td>Implementation tracking documents — living records of what was built, what failed, review findings, and speculative review timing.</td></tr>
+              <tr><td><code>context/refs/</code></td><td>Reference materials including research briefs produced by <a href="#cmd-research">/bp:research</a>, PRDs, and API documentation.</td></tr>
+            </table>
+          </div>
+          <p>The <code>scripts/</code> directory contains the Codex integration shell scripts:</p>
+          <div class="table-wrap">
+            <table>
+              <tr><th>Script</th><th>Purpose</th></tr>
+              <tr><td><code>codex-detect.sh</code></td><td>Codex binary and plugin detection</td></tr>
+              <tr><td><code>codex-config.sh</code></td><td>Blueprint configuration (all settings)</td></tr>
+              <tr><td><code>codex-review.sh</code></td><td>Adversarial code review invocation</td></tr>
+              <tr><td><code>codex-findings.sh</code></td><td>Structured finding management</td></tr>
+              <tr><td><code>codex-gate.sh</code></td><td>Severity-based tier gating + fix cycle</td></tr>
+              <tr><td><code>codex-design-challenge.sh</code></td><td>Design challenge for blueprint drafts</td></tr>
+              <tr><td><code>codex-speculative.sh</code></td><td>Background speculative review pipeline</td></tr>
+              <tr><td><code>command-gate.sh</code></td><td>PreToolUse command safety gate</td></tr>
+            </table>
+          </div>
         </section>
       </section>
     </main>
