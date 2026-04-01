@@ -759,84 +759,336 @@
       <h1>Blueprint Documentation</h1>
       <p class="page-subtitle">Specification-Driven Development for AI Coding Agents</p>
 
-      <!-- Overview -->
+      <!-- Overview (R6) -->
       <section id="overview">
         <h2>Overview</h2>
-        <p class="placeholder-note">Content will be added in a later task.</p>
+        <p>Blueprint is a Claude Code plugin for <strong>specification-driven development</strong>. Instead of prompting an AI agent and hoping for the best, Blueprint introduces a specification layer between your intent and the code. You describe what you want. The system decomposes it into domain blueprints with numbered requirements and testable acceptance criteria. Then it builds from those blueprints — not from memory, not from vibes — in an automated loop that validates every step.</p>
+
+        <p>Blueprint is for developers who use AI coding agents and want <strong>reliable, traceable results</strong>. The blueprints are the source of truth. Agents read them, build from them, and validate against them. When something breaks, the system traces the failure back to the blueprint — not the code.</p>
+
+        <h3>The DABI Lifecycle</h3>
+        <p>Blueprint follows four phases — each driven by a slash command inside Claude Code:</p>
+
+        <div class="table-wrap">
+          <table>
+            <tr>
+              <th>Phase</th>
+              <th>Command</th>
+              <th>What It Does</th>
+              <th>What It Produces</th>
+            </tr>
+            <tr>
+              <td><strong>Draft</strong></td>
+              <td><code><a href="#cmd-draft">/bp:draft</a></code></td>
+              <td>Decompose requirements into domain blueprints</td>
+              <td>Blueprints with R-numbered requirements</td>
+            </tr>
+            <tr>
+              <td><strong>Architect</strong></td>
+              <td><code><a href="#cmd-architect">/bp:architect</a></code></td>
+              <td>Break into tasks, map dependencies, organize into tiers</td>
+              <td>Tiered build site + dependency graph</td>
+            </tr>
+            <tr>
+              <td><strong>Build</strong></td>
+              <td><code><a href="#cmd-build">/bp:build</a></code></td>
+              <td>Auto-parallel build with validation at every step</td>
+              <td>Working software, committed tier by tier</td>
+            </tr>
+            <tr>
+              <td><strong>Inspect</strong></td>
+              <td><code><a href="#cmd-inspect">/bp:inspect</a></code></td>
+              <td>Gap analysis + peer review against blueprints</td>
+              <td>Findings report traced to specs</td>
+            </tr>
+          </table>
+        </div>
+
+        <p>An optional <a href="#cmd-research">Research</a> phase grounds the design in real evidence before blueprints are written. For a deeper explanation, see the <a href="#dabi-lifecycle">DABI Lifecycle</a> section under <a href="#methodology">Methodology</a>.</p>
       </section>
 
-      <!-- Quick Start -->
+      <!-- Quick Start (R7) -->
       <section id="quick-start">
         <h2>Quick Start</h2>
+        <p>Two paths depending on whether you are starting fresh or adding Blueprint to an existing codebase.</p>
+
         <section id="greenfield">
           <h3>Greenfield</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <p>Starting a new project from scratch. Blueprint decomposes your idea into blueprints, plans the build order, then implements everything automatically.</p>
+          <pre><code><span class="cmd">&gt; /bp:draft</span>
+<span class="cmt"># Blueprint asks what you're building</span>
+<span class="out">What are you building?</span>
+
+<span class="cmd">&gt; A REST API for task management. Users, projects, tasks with priorities
+  and due dates, assignments. PostgreSQL.</span>
+
+<span class="cmt"># Blueprint decomposes into domain blueprints with numbered requirements</span>
+<span class="out">Created 4 blueprints (22 requirements, 69 acceptance criteria)
+Next: /bp:architect</span>
+
+<span class="cmd">&gt; /bp:architect</span>
+<span class="cmt"># Reads blueprints, breaks into tasks, maps dependencies into tiers</span>
+<span class="out">Generated build site: 34 tasks, 5 tiers
+Next: /bp:build</span>
+
+<span class="cmd">&gt; /bp:build</span>
+<span class="cmt"># The Ralph Loop — implements, validates, commits, repeats</span>
+<span class="out">Loop activated — 34 tasks, 20 max iterations.
+...
+All tasks done. Build passes. Tests pass.
+BLUEPRINT COMPLETE — 34 tasks in 18 iterations.</span></code></pre>
+          <p>Every line of code traces to a requirement. Every requirement has acceptance criteria. See <a href="#cmd-draft">/bp:draft</a>, <a href="#cmd-architect">/bp:architect</a>, and <a href="#cmd-build">/bp:build</a> for full command details.</p>
         </section>
+
         <section id="brownfield">
           <h3>Brownfield</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <p>Adding Blueprint to an existing codebase. Use <code>--from-code</code> to reverse-engineer blueprints from your code, then scope the build to the gaps.</p>
+          <pre><code><span class="cmd">&gt; /bp:draft --from-code</span>
+<span class="cmt"># Blueprint explores your codebase and reverse-engineers specs</span>
+<span class="out">Exploring codebase... Next.js 14, Prisma, NextAuth.
+Created 6 blueprints — 4 requirements are gaps (not yet implemented).</span>
+
+<span class="cmd">&gt; /bp:architect --filter collaboration</span>
+<span class="cmt"># Only plan the subset you want to build now</span>
+<span class="out">Generated build site: 8 tasks, 3 tiers</span>
+
+<span class="cmd">&gt; /bp:build</span>
+<span class="cmt"># Builds only the filtered tasks</span>
+<span class="out">Loop activated — 8 tasks.
+...
+BLUEPRINT COMPLETE — 8 tasks in 8 iterations.</span></code></pre>
+          <p>The <code>--from-code</code> flag tells Blueprint to read your existing code and produce specs that match it, while highlighting gaps. The <code>--filter</code> flag on <a href="#cmd-architect">/bp:architect</a> scopes the build to a specific domain.</p>
         </section>
       </section>
 
-      <!-- Commands -->
+      <!-- Commands (R8) -->
       <section id="commands">
         <h2>Commands</h2>
+        <p>All Blueprint commands are Claude Code slash commands. They follow the DABI lifecycle phases, plus utility commands for inspection and maintenance.</p>
+
         <section id="cmd-draft">
-          <h3><code>/bp:draft</code></h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <h3><code>/bp:draft</code> <span class="phase-badge" data-phase="draft">Draft</span></h3>
+          <div class="command-card">
+            <p>Decompose requirements into domain blueprints with numbered requirements and testable acceptance criteria. Each blueprint is stack-independent and human-readable.</p>
+            <pre><code><span class="cmd">&gt; /bp:draft</span>
+<span class="out">What are you building?</span>
+<span class="cmd">&gt; A REST API for task management with users, projects, and tasks.</span>
+<span class="out">Created 4 blueprints (22 requirements, 69 acceptance criteria)</span></code></pre>
+            <p>When the project would benefit from it, the draft phase offers to run <a href="#cmd-research">deep research</a> before design Q&amp;A. After the internal reviewer approves, blueprints are sent to Codex for a <a href="#design-challenge">design challenge</a>.</p>
+            <div class="table-wrap">
+              <table>
+                <tr><th>Flag</th><th>Description</th></tr>
+                <tr><td><code>--from-code</code></td><td>Reverse-engineer blueprints from an existing codebase and identify gaps</td></tr>
+              </table>
+            </div>
+            <p>Related: <a href="#cmd-architect">/bp:architect</a>, <a href="#cmd-research">/bp:research</a></p>
+          </div>
         </section>
+
         <section id="cmd-architect">
-          <h3><code>/bp:architect</code></h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <h3><code>/bp:architect</code> <span class="phase-badge" data-phase="architect">Architect</span></h3>
+          <div class="command-card">
+            <p>Read all blueprints, break requirements into tasks, map dependencies, and organize everything into a tiered build site. Tier 0 has no dependencies, Tier 1 depends only on Tier 0, and so on.</p>
+            <pre><code><span class="cmd">&gt; /bp:architect</span>
+<span class="out">Generated build site: 34 tasks, 5 tiers
+Next: /bp:build</span></code></pre>
+            <div class="table-wrap">
+              <table>
+                <tr><th>Flag</th><th>Description</th></tr>
+                <tr><td><code>--filter &lt;domain&gt;</code></td><td>Scope the build site to a specific domain or subset of blueprints</td></tr>
+              </table>
+            </div>
+            <p>Related: <a href="#cmd-draft">/bp:draft</a>, <a href="#cmd-build">/bp:build</a></p>
+          </div>
         </section>
+
         <section id="cmd-build">
-          <h3><code>/bp:build</code></h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <h3><code>/bp:build</code> <span class="phase-badge" data-phase="build">Build</span></h3>
+          <div class="command-card">
+            <p>The Ralph Loop. Automatically implements tasks from the build site, validates each against acceptance criteria, commits on pass, diagnoses and fixes on fail. Parallelizes independent tasks across subagents and progresses through tiers autonomously.</p>
+            <pre><code><span class="cmd">&gt; /bp:build</span>
+<span class="out">Loop activated — 34 tasks, 20 max iterations.
+
+═══ Wave 1 ═══
+3 task(s) ready:
+  T-001: Database schema (tier 0, deps: none)
+  T-002: Auth middleware (tier 0, deps: none)
+  T-003: Config loader (tier 0, deps: none)
+
+Dispatching 2 grouped subagents...
+All 3 tasks complete. Merging...
+
+═══ Wave 2 ═══
+2 task(s) ready...
+...
+═══ BUILD COMPLETE ═══
+Waves: 2 | Tasks: 5/5</span></code></pre>
+            <p>At every tier boundary, <a href="#tier-gate">Codex adversarial review</a> gates advancement — P0/P1 findings must be fixed before the next tier starts. Circuit breakers prevent infinite loops: 3 test failures marks a task BLOCKED.</p>
+            <p>Related: <a href="#cmd-architect">/bp:architect</a>, <a href="#cmd-progress">/bp:progress</a>, <a href="#cmd-inspect">/bp:inspect</a></p>
+          </div>
         </section>
+
         <section id="cmd-inspect">
-          <h3><code>/bp:inspect</code></h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <h3><code>/bp:inspect</code> <span class="phase-badge" data-phase="inspect">Inspect</span></h3>
+          <div class="command-card">
+            <p>Gap analysis compares what was built against what was specified. Peer review checks for bugs, security issues, and missed requirements. Everything is traced back to blueprint requirements.</p>
+            <pre><code><span class="cmd">&gt; /bp:inspect</span>
+<span class="out">Gap analysis: 22/22 requirements covered
+Peer review: 1 finding (P2 — input validation on PATCH endpoint)
+Traced to: blueprint-api.md R14</span></code></pre>
+            <p>Related: <a href="#cmd-gap-analysis">/bp:gap-analysis</a>, <a href="#cmd-build">/bp:build</a></p>
+          </div>
         </section>
+
         <section id="cmd-research">
-          <h3><code>/bp:research</code></h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <h3><code>/bp:research</code> <span class="phase-badge" data-phase="research">Research</span></h3>
+          <div class="command-card">
+            <p>Dispatch 2-8 parallel subagents to explore the codebase and search the web for current best practices, library landscape, reference implementations, and common pitfalls. A synthesizer agent cross-validates findings and produces a research brief.</p>
+            <pre><code><span class="cmd">&gt; /bp:research "build a Verse compiler targeting WASM"</span>
+<span class="out">Dispatching 4 research agents...
+Synthesizing findings...
+Research brief saved to context/refs/research-brief-verse-wasm.md</span></code></pre>
+            <p>Research is also offered inline during <a href="#cmd-draft">/bp:draft</a> when the project involves unfamiliar technology or architectural decisions with multiple viable approaches.</p>
+            <p>Related: <a href="#cmd-draft">/bp:draft</a></p>
+          </div>
         </section>
+
         <section id="cmd-progress">
-          <h3><code>/bp:progress</code></h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <h3><code>/bp:progress</code> <span class="phase-badge" data-phase="utility">Utility</span></h3>
+          <div class="command-card">
+            <p>Check build site progress — tasks done, in progress, blocked, and remaining.</p>
+            <pre><code><span class="cmd">&gt; /bp:progress</span>
+<span class="out">Build site: build-site-api.md
+Done: 28/34 | In progress: 2 | Blocked: 1 | Remaining: 3</span></code></pre>
+            <p>Related: <a href="#cmd-build">/bp:build</a>, <a href="#cmd-gap-analysis">/bp:gap-analysis</a></p>
+          </div>
         </section>
+
         <section id="cmd-gap-analysis">
-          <h3><code>/bp:gap-analysis</code></h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <h3><code>/bp:gap-analysis</code> <span class="phase-badge" data-phase="utility">Utility</span></h3>
+          <div class="command-card">
+            <p>Compare what was built against what was intended. Lists requirements that are fully covered, partially covered, or missing implementation.</p>
+            <pre><code><span class="cmd">&gt; /bp:gap-analysis</span>
+<span class="out">Scanning 4 blueprints against codebase...
+Covered: 20/22 | Partial: 1 | Missing: 1
+  R14 (input validation): partial — PATCH endpoint missing
+  R18 (rate limiting): missing</span></code></pre>
+            <p>Related: <a href="#cmd-inspect">/bp:inspect</a>, <a href="#cmd-revise">/bp:revise</a></p>
+          </div>
         </section>
+
         <section id="cmd-revise">
-          <h3><code>/bp:revise</code></h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <h3><code>/bp:revise</code> <span class="phase-badge" data-phase="utility">Utility</span></h3>
+          <div class="command-card">
+            <p>Trace manual fixes back into blueprints. When you fix a bug or change code by hand, <code>/bp:revise</code> updates the blueprints and context files so the specification stays in sync with reality.</p>
+            <pre><code><span class="cmd">&gt; /bp:revise</span>
+<span class="out">Detected 3 manual changes since last build.
+Updated blueprint-api.md: R14 acceptance criteria refined.
+Updated impl-api.md: manual fix logged.</span></code></pre>
+            <p>Related: <a href="#cmd-draft">/bp:draft</a>, <a href="#cmd-gap-analysis">/bp:gap-analysis</a></p>
+          </div>
         </section>
+
         <section id="cmd-codex-review">
-          <h3><code>/bp:codex-review</code></h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <h3><code>/bp:codex-review</code> <span class="phase-badge" data-phase="utility">Utility</span></h3>
+          <div class="command-card">
+            <p>Run a standalone Codex adversarial review on the current diff. Useful outside of the build loop when you want a second-model review on demand.</p>
+            <pre><code><span class="cmd">&gt; /bp:codex-review</span>
+<span class="out">Reviewing diff against worktree base...
+2 findings: 1 P1 (nil pointer in error path), 1 P3 (unused import)</span></code></pre>
+            <p>Requires <a href="https://github.com/openai/codex" target="_blank" rel="noopener">Codex</a> to be installed. See <a href="#codex-integration">Codex Integration</a> for details.</p>
+            <p>Related: <a href="#tier-gate">Tier Gate</a>, <a href="#design-challenge">Design Challenge</a></p>
+          </div>
         </section>
+
         <section id="cmd-help">
-          <h3><code>/bp:help</code></h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <h3><code>/bp:help</code> <span class="phase-badge" data-phase="utility">Utility</span></h3>
+          <div class="command-card">
+            <p>Show the Blueprint usage guide — lists all commands, their phases, and a brief description of the DABI workflow.</p>
+            <pre><code><span class="cmd">&gt; /bp:help</span>
+<span class="out">Blueprint v2.1.0 — Specification-Driven Development
+
+Commands:
+  /bp:draft       Draft blueprints from requirements
+  /bp:architect   Generate tiered build site
+  /bp:build       Auto-parallel build loop
+  /bp:inspect     Gap analysis + peer review
+  ...</span></code></pre>
+          </div>
         </section>
       </section>
 
-      <!-- Methodology -->
+      <!-- Methodology (R9) -->
       <section id="methodology">
         <h2>Methodology</h2>
+        <p>Blueprint is built on a simple observation: LLMs are non-deterministic, but software engineering doesn't have to be. By applying structured methodology, we extract reliable outcomes from a stochastic process.</p>
+
         <section id="dabi-lifecycle">
-          <h3>DABI Lifecycle</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <h3>The DABI Lifecycle</h3>
+          <p>Every Blueprint project follows four phases. Each phase has a clear input, a clear output, and a validation gate before the next phase begins.</p>
+
+          <p><strong>Draft</strong> — define the what. You describe what you're building in natural language. Blueprint decomposes it into domain blueprints — structured documents with numbered requirements (R1, R2, ...) and testable acceptance criteria. Each blueprint is stack-independent and human-readable. An optional <a href="#cmd-research">research phase</a> can ground the design in real evidence before blueprints are written. After the internal reviewer approves, blueprints are sent to Codex for a <a href="#design-challenge">design challenge</a> that catches decomposition flaws, missing requirements, and ambiguous criteria.</p>
+
+          <p><strong>Architect</strong> — plan the order. Reads all blueprints, breaks requirements into tasks, maps dependencies, and organizes everything into a tiered build site — a dependency graph where Tier 0 has no dependencies, Tier 1 depends only on Tier 0, and so on. This is what the build loop consumes.</p>
+
+          <p><strong>Build</strong> — run the loop. The Ralph Loop. Each iteration reads the build site, finds the next unblocked task, loads the relevant blueprint and acceptance criteria, implements the task, then validates (build + tests + acceptance criteria). Pass means commit, mark done, move to the next task. Fail means diagnose, fix, revalidate. At every tier boundary, <a href="#tier-gate">Codex adversarial review</a> gates advancement. The loop runs until all tasks are done or the iteration limit is reached.</p>
+
+          <p><strong>Inspect</strong> — verify the result. Gap analysis compares what was built against what was specified. Peer review checks for bugs, security issues, and missed requirements. Everything is traced back to blueprint requirements so you know exactly where any issue originated.</p>
         </section>
+
         <section id="source-of-truth">
           <h3>Blueprints as Source of Truth</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <p>Most AI coding tools treat the agent as a black box — you prompt, it generates, you hope. Blueprint inverts this. <strong>The specification is the product. The code is a derivative.</strong> When the spec is clear, the code follows. When the code is wrong, the spec tells you why.</p>
+
+          <p>This matters because AI agents are getting better every month, but the fundamental problem remains: without a specification, there is nothing to validate against. Blueprint gives every agent — current and future — a contract to build from and a standard to meet.</p>
+
+          <p>Blueprints persist across build cycles. They are not ephemeral prompts — they are versioned, structured documents that drive every downstream decision. When a bug is found, <a href="#cmd-revise">/bp:revise</a> traces it back to the blueprint and updates the specification so the iteration loop can reproduce the fix automatically.</p>
+
+          <p>With <a href="#codex-integration">Codex adversarial review</a>, Blueprint goes further: a second model with different training and different blind spots reviews both the specification and the implementation. Two models disagreeing is a signal. Two models agreeing is confidence.</p>
         </section>
+
         <section id="scientific-method">
           <h3>Scientific Method Applied</h3>
-          <p class="placeholder-note">Content will be added in a later task.</p>
+          <p>Blueprint applies the scientific method — hypothesize, test, observe, refine — to extract reliable outcomes from a stochastic process. Each concept in the methodology maps directly to a step in the scientific method:</p>
+
+          <div class="table-wrap">
+            <table>
+              <tr>
+                <th>Scientific Method</th>
+                <th>Blueprint Concept</th>
+                <th>Role</th>
+              </tr>
+              <tr>
+                <td>Hypothesis</td>
+                <td><strong>Blueprints</strong></td>
+                <td>What you expect the software to do — numbered requirements with testable criteria</td>
+              </tr>
+              <tr>
+                <td>Controlled conditions</td>
+                <td><strong>Validation gates</strong></td>
+                <td>Build, tests, and acceptance criteria that must pass before advancing</td>
+              </tr>
+              <tr>
+                <td>Repeated trials</td>
+                <td><strong>Convergence loops</strong></td>
+                <td>The Ralph Loop — iterate until stable, with circuit breakers to prevent infinite loops</td>
+              </tr>
+              <tr>
+                <td>Lab notebook</td>
+                <td><strong>Implementation tracking</strong></td>
+                <td>What was tried, what worked, what failed — living records in <code>context/impl/</code></td>
+              </tr>
+              <tr>
+                <td>Update the hypothesis</td>
+                <td><strong>Revision</strong></td>
+                <td>Trace bugs back to blueprints via <a href="#cmd-revise">/bp:revise</a> and fix at the source</td>
+              </tr>
+            </table>
+          </div>
+
+          <p>The key insight is that non-determinism is not a problem if you have a validation loop. A single LLM pass produces a rough draft. But repeated passes with clear acceptance criteria converge toward correctness — the same way repeated experiments converge toward truth.</p>
+
+          <p>The plugin ships with 8 specialized agents, a multi-agent research system, and 13 <a href="#skills-reference">deep-dive skills</a> covering the full methodology. When Codex is installed, the system operates as a dual-model architecture — Claude builds and Codex reviews — catching classes of errors that single-model self-review cannot detect.</p>
         </section>
       </section>
 
