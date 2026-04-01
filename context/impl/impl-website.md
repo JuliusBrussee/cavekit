@@ -24,6 +24,6 @@ Build site: context/plans/build-site.md
 | T-014 | DONE | Docs content: DABI Lifecycle walkthrough, Blueprints as Source of Truth, Scientific Method Applied mapping. |
 | T-015 | DONE | Docs content: 5 Codex Integration subsections (Design Challenge, Tier Gate, Speculative Review, Command Safety Gate, Graceful Degradation). |
 | T-016 | DONE | Docs content: 13 skill cards + settings reference table + file structure tree. |
-| T-017 | NOT STARTED | Landing page polish: responsive, a11y, perf audit. |
-| T-018 | NOT STARTED | Docs page polish: responsive, a11y, perf audit. |
-| T-019 | NOT STARTED | Cross-page integration: nav links, deep links, consistency. |
+| T-017 | DONE | Landing page polish: skip-to-content link, fixed hero install command (was truncated), docs.html links, a11y audit pass. |
+| T-018 | DONE | Docs page polish: audit pass — semantic HTML, aria-expanded/current, filter label, focus-visible, heading hierarchy, responsive breakpoints all present. |
+| T-019 | DONE | Cross-page integration: index→docs links (2), docs→index links (3), GitHub link, deep link IDs for all sections, consistent CSS custom properties. |
