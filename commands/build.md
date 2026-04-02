@@ -2,7 +2,7 @@
 name: bp-build
 description: "Implement a build site or plan — automatically parallelizes independent tasks and progresses through tiers autonomously"
 argument-hint: "[FILE] [--filter PATTERN] [--peer-review] [--max-iterations N] [--completion-promise TEXT]"
-allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh:*)", "Bash(git *)"]
+allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh:*)", "Bash(${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh:*)", "Bash(git *)"]
 ---
 
 # Blueprint Build — Autonomous Implementation
@@ -12,6 +12,14 @@ This is the third phase of Blueprint. Execute the setup script:
 ```!
 "${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh" $ARGUMENTS
 ```
+
+## Resolve Execution Profile
+
+Before starting waves:
+
+1. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" summary` and report that exact line once.
+2. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model execution` and treat the result as `EXECUTION_MODEL`.
+3. Use that exact `EXECUTION_MODEL` string in every `bp:task-builder` delegation below. Do not hard-code `opus`, `sonnet`, or `haiku` in this command.
 
 ## If site selection is required
 
@@ -36,7 +44,7 @@ Once the setup script completes (outputs the ralph prompt), you run the executio
 
    **0 ready tasks** → Check if ALL tasks are done. If yes → completion. If not → report blockage and stop.
 
-   **1 ready task** → Implement it directly yourself. Follow the ralph prompt instructions (read blueprint, implement, validate, commit, track).
+   **1 ready task** → Delegate it as a single-task `bp:task-builder` packet using `EXECUTION_MODEL`. This keeps execution model selection explicit even when only one task is ready.
 
    **2+ ready tasks** → Partition the frontier into a small set of coherent work packets, then parallelize those. Optimize for throughput, not raw agent count.
 
@@ -46,11 +54,12 @@ Once the setup script completes (outputs the ralph prompt), you run the executio
    - Split large, risky, or file-disjoint tasks into separate packets
    - Keep ownership clean: each packet should have a clear primary file/module surface
    - Prefer a few meaningful packets, usually 2-4 concurrent subagents, rather than one agent per task
-   - If a tiny task is faster to do inline than to delegate, keep it yourself and only delegate the heavier or cleaner-isolated packets
+   - Prefer delegated execution whenever model selection matters; only keep work inline if you are certain the current parent model already matches `EXECUTION_MODEL`
 
    ```
    Agent(
      subagent_type: "bp:task-builder",
+     model: "{EXECUTION_MODEL}",
      isolation: "worktree",
      prompt: "TASKS:
    - {task_id}: {title}
@@ -88,7 +97,7 @@ Once the setup script completes (outputs the ralph prompt), you run the executio
    Dispatch all packets for the wave in a single message with multiple Agent tool calls.
 
 5. **After wave completes**:
-   - For parallel waves, merge and clean up each subagent **one at a time**:
+   - For any delegated wave (single-agent or parallel), merge and clean up each subagent **one at a time**:
      1. `git merge <branch> --no-edit` — merge the subagent's branch
      2. `git worktree remove <worktree-path>` — remove the worktree directory (required before branch can be deleted)
      3. `git branch -D <branch>` — delete the branch

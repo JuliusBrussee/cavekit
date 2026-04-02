@@ -11,6 +11,15 @@ Run this after `/bp:build` completes (or is stopped). It does two things:
 1. **Gap analysis** — compares what was built against what the blueprints require
 2. **Peer review** — finds bugs, security issues, and quality problems in the code that was written
 
+## Step 0: Resolve Execution Profile
+
+Before starting inspection:
+
+1. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" summary` and print that exact line once.
+2. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model reasoning` and treat the result as `REASONING_MODEL`.
+
+Use `REASONING_MODEL` explicitly for the delegated surveyor and inspector work below.
+
 ## Step 1: Gather Context
 
 Read these files to understand what happened:
@@ -26,6 +35,8 @@ If no impl tracking or loop log exists, tell the user:
 > No loop artifacts found. Run `/bp:build` first, then `/bp:inspect` after it completes.
 
 ## Step 2: Gap Analysis
+
+Do not perform the substantive gap analysis inline. Dispatch a `bp:surveyor` subagent with `model: "{REASONING_MODEL}"` to produce the coverage analysis.
 
 For every blueprint requirement (R-numbered) and its acceptance criteria, determine status:
 
@@ -43,6 +54,8 @@ For every blueprint requirement (R-numbered) and its acceptance criteria, determ
 - Run the test suite if possible: `npm test`, `pytest`, `cargo test`, etc.
 
 ## Step 3: Peer Review Code Review
+
+Do not perform the substantive code review inline. Dispatch a `bp:inspector` subagent with `model: "{REASONING_MODEL}"` to review the loop diff and completed tasks.
 
 Review all code changes from the loop (`git diff` output) looking for:
 

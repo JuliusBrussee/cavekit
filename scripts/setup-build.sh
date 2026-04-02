@@ -8,6 +8,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+if [[ -f "$SCRIPT_DIR/bp-config.sh" ]]; then
+  source "$SCRIPT_DIR/bp-config.sh"
+else
+  bp_config_summary_line() { echo "Blueprint preset: quality (reasoning=opus, execution=opus, exploration=sonnet)"; }
+  bp_config_model() { echo "opus"; }
+fi
+
 FILTER=""
 PEER_REVIEW=false
 MAX_ITERATIONS=20
@@ -98,6 +105,9 @@ HELP_EOF
       ;;
   esac
 done
+
+BP_PRESET_SUMMARY="$(bp_config_summary_line)"
+echo "$BP_PRESET_SUMMARY"
 
 # ─── Clean stale state ──────────────────────────────────────────────────────
 

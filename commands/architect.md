@@ -10,6 +10,15 @@ This is the second phase of Blueprint. You read blueprints and generate a build 
 
 No domain plans. No file ownership. No time budgets. Just: tasks, what blueprint requirement they implement, and what blocks what.
 
+## Step 0: Resolve Execution Profile
+
+Before generating the site:
+
+1. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" summary` and print that exact line once.
+2. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model reasoning` and treat the result as `REASONING_MODEL`.
+
+Do NOT rely on the agent frontmatter model. Dispatch the actual site-generation work to a `bp:architect` subagent with `model: "{REASONING_MODEL}"`.
+
 ## Step 1: Validate Blueprints Exist
 
 Check `context/blueprints/` for blueprint files. If none found, tell the user:
@@ -48,6 +57,8 @@ Organize tasks into tiers:
 ## Step 5: Write the Site
 
 Create the `context/plans/` directory if it doesn't exist.
+
+Dispatch a `bp:architect` subagent with `model: "{REASONING_MODEL}"` to produce the build-site contents from the blueprints and dependencies you cataloged above, then write the returned site to disk.
 
 Write `context/plans/build-site.md`:
 

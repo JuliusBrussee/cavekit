@@ -400,10 +400,16 @@ Blueprint works the same as before. Codex makes it harder to ship bad blueprints
 
 ### Configuration
 
-All Codex settings live in `.blueprint/config`:
+Blueprint settings can live in two places:
+
+- User default: `~/.blueprint/config`
+- Project override: `.blueprint/config`
+
+Precedence is: project override > user default > built-in default.
 
 | Setting | Values | Default | Purpose |
 |---------|--------|---------|---------|
+| `bp_model_preset` | `expensive` `quality` `balanced` `fast` | `quality` | Resolve `reasoning`, `execution`, and `exploration` models for Blueprint commands |
 | `codex_review` | `auto` `off` | `auto` | Enable/disable Codex reviews |
 | `codex_model` | model string | (Codex default) | Model for Codex calls |
 | `tier_gate_mode` | `severity` `strict` `permissive` `off` | `severity` | How findings gate tier advancement |
@@ -411,6 +417,26 @@ All Codex settings live in `.blueprint/config`:
 | `command_gate_timeout` | milliseconds | `3000` | Timeout for Codex safety classification |
 | `speculative_review` | `on` `off` | `on` | Background review of previous tier |
 | `speculative_review_timeout` | seconds | `300` | Max wait for speculative results |
+
+Built-in model presets:
+
+| Preset | Reasoning | Execution | Exploration |
+|--------|-----------|-----------|-------------|
+| `expensive` | `opus` | `opus` | `opus` |
+| `quality` | `opus` | `opus` | `sonnet` |
+| `balanced` | `opus` | `sonnet` | `haiku` |
+| `fast` | `sonnet` | `sonnet` | `haiku` |
+
+Use `/bp:config` to inspect or change the active preset.
+
+Examples:
+
+```bash
+/bp:config
+/bp:config list
+/bp:config preset balanced
+/bp:config preset fast --global
+```
 
 ---
 
@@ -425,6 +451,7 @@ All Codex settings live in `.blueprint/config`:
 | `/bp:architect` | Architect | Generate a tiered build site from blueprints |
 | `/bp:build` | Build | Auto-parallel build — dispatches independent tasks concurrently, progresses through tiers autonomously |
 | `/bp:inspect` | Inspect | Gap analysis + peer review against blueprints |
+| `/bp:config` | — | Show or update the active Blueprint execution preset |
 | `/bp:codex-review` | — | Run standalone Codex adversarial review on current diff |
 | `/bp:progress` | — | Check build site progress |
 | `/bp:gap-analysis` | — | Compare built vs. intended |
@@ -460,8 +487,9 @@ context/
     └── research-{topic}/           # Raw findings + findings board
 
 scripts/
+├── bp-config.sh              # Canonical Blueprint config + model preset resolver
 ├── codex-detect.sh           # Codex binary and plugin detection
-├── codex-config.sh           # Blueprint configuration (all settings)
+├── codex-config.sh           # Backward-compatible wrapper for bp-config.sh
 ├── codex-review.sh           # Adversarial code review invocation
 ├── codex-findings.sh         # Structured finding management
 ├── codex-gate.sh             # Severity-based tier gating + fix cycle

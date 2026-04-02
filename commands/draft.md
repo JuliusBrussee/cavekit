@@ -10,6 +10,16 @@ This is the first phase of Blueprint. You are writing implementation-agnostic bl
 
 **HARD GATE:** Do NOT generate blueprint files until you have presented the design and the user has approved it. This applies to EVERY project regardless of perceived simplicity. A todo app, a config change, a single-domain project — all of them go through the design process. The design can be short for simple projects, but you MUST present it and get approval.
 
+## Step 0: Resolve Execution Profile
+
+Before doing any substantive work:
+
+1. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" summary` and print that exact line once.
+2. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model exploration` and store it as `EXPLORATION_MODEL`.
+3. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model reasoning` and store it as `REASONING_MODEL`.
+
+Keep the user Q&A in the parent thread. Use `EXPLORATION_MODEL` for helper exploration/research and `REASONING_MODEL` for blueprint generation and review.
+
 ## Determine Mode
 
 Parse `$ARGUMENTS`:
@@ -37,6 +47,8 @@ Before asking ANY questions, understand what already exists:
 5. Check `context/refs/` for reference materials already provided
 
 This gives you grounding before engaging the user. Do NOT skip this even if the user has already described what they want.
+
+If the repo scan is non-trivial, dispatch one helper exploration subagent with `model: "{EXPLORATION_MODEL}"` to gather the codebase/docs/git summary, then continue the design conversation in the parent thread.
 
 ## Step 3: Gather Input
 
@@ -129,11 +141,11 @@ Use standard depth (3 web agents).
 
 **4. Dispatch wave 1 in parallel** (all codebase agents + web agents for library-landscape and existing-art):
 
-Each codebase agent (subagent_type: `Explore`, model: `sonnet`):
+Each codebase agent (subagent_type: `Explore`, model: `EXPLORATION_MODEL`):
 ```
 Agent(
   subagent_type: "Explore",
-  model: "sonnet",
+  model: "{EXPLORATION_MODEL}",
   description: "Research codebase {categories}",
   prompt: "ROLE: Codebase researcher ({categories}) for: {description}
   RESEARCH QUESTIONS: {assigned questions}
@@ -142,11 +154,11 @@ Agent(
 )
 ```
 
-Each wave 1 web agent (subagent_type: `general-purpose`, model: `sonnet`):
+Each wave 1 web agent (subagent_type: `general-purpose`, model: `EXPLORATION_MODEL`):
 ```
 Agent(
   subagent_type: "general-purpose",
-  model: "sonnet",
+  model: "{EXPLORATION_MODEL}",
   description: "Research web {categories}",
   prompt: "ROLE: Web researcher ({categories}) for: {description}
   RESEARCH QUESTIONS: {assigned questions}
@@ -162,7 +174,7 @@ Agent(
 ```
 Agent(
   subagent_type: "general-purpose",
-  model: "sonnet",
+  model: "{EXPLORATION_MODEL}",
   description: "Research web {categories}",
   prompt: "ROLE: Web researcher ({categories}) for: {description}
   SHARED FINDINGS: {findings-board.md contents}
@@ -177,7 +189,7 @@ Agent(
 ```
 Agent(
   subagent_type: "general-purpose",
-  model: "opus",
+  model: "{REASONING_MODEL}",
   description: "Synthesize research findings",
   prompt: "ROLE: Research synthesizer for: {description}
   RAW FINDINGS: {all raw-*.md contents}
@@ -290,6 +302,8 @@ Analyze the input and decompose into logical domains. Each domain should be:
 
 **Only after user approves the design**, generate blueprint files.
 
+Do NOT perform the actual blueprint writing inline in the parent thread. Dispatch a `bp:drafter` subagent with `model: "{REASONING_MODEL}"` to write the files, then review the result in the parent thread.
+
 For each domain, create `context/blueprints/blueprint-{domain}.md`:
 
 ```markdown
@@ -385,7 +399,7 @@ last_edited: "{CURRENT_DATE_UTC}"
 After writing blueprints, dispatch a **blueprint-reviewer** subagent to verify quality:
 
 ```
-Agent tool (subagent_type: "bp:inspector"):
+Agent tool (subagent_type: "bp:blueprint-reviewer", model: "{REASONING_MODEL}"):
   description: "Review blueprint documents"
   prompt: |
     You are a blueprint reviewer. Verify these blueprints are complete and ready for the Architect phase.

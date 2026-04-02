@@ -2,7 +2,7 @@
 name: bp-quick
 description: "Quick end-to-end: describe a feature, get it built — draft, architect, build, and inspect without stopping"
 argument-hint: "<feature description> [--skip-inspect] [--peer-review] [--max-iterations N]"
-allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh:*)", "Bash(git *)"]
+allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh:*)", "Bash(${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh:*)", "Bash(git *)"]
 ---
 
 # Blueprint Quick — End-to-End Feature Build
@@ -10,6 +10,17 @@ allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh:*)", "Bash(gi
 Run the full Blueprint pipeline (draft → architect → build → inspect) from a single feature description with no stops for user input. Draft and architect phases are streamlined — no interactive design conversation, no user gates between phases.
 
 **When to use:** Small-to-medium features where you trust the agent's decomposition. For large or ambiguous projects, use `/bp:draft` interactively instead.
+
+## Phase 0: Resolve Execution Profile
+
+Before starting the pipeline:
+
+1. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" summary` and print that exact line once.
+2. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model reasoning` and store it as `REASONING_MODEL`.
+3. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model execution` and store it as `EXECUTION_MODEL`.
+4. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model exploration` and store it as `EXPLORATION_MODEL`.
+
+Use those resolved model strings explicitly in every delegated phase below. Do not rely on agent frontmatter model defaults.
 
 ## Parse Arguments
 
@@ -31,6 +42,8 @@ Stop and wait for user input.
 ## Phase 1: Quick Draft
 
 Streamlined version of `/bp:draft` — no interactive Q&A, no approach proposals, no incremental presentation.
+
+Do NOT run this phase inline in the parent thread. Dispatch a `bp:drafter` subagent with `model: "{REASONING_MODEL}"` and give it the quick-draft rules below. If that subagent needs helper exploration for repo scanning, it should dispatch those helpers with `model: "{EXPLORATION_MODEL}"`.
 
 ### 1a: Ensure Directories
 
@@ -81,6 +94,8 @@ Proceed immediately — no user gate.
 
 Streamlined version of `/bp:architect` — runs inline, no stopping.
 
+Do NOT run this phase inline in the parent thread. Dispatch a `bp:architect` subagent with `model: "{REASONING_MODEL}"` and give it the quick-architect rules below.
+
 ### 2a: Read Blueprints
 
 Read all blueprint files just written.
@@ -119,6 +134,8 @@ Run the **full build phase** exactly as `/bp:build` defines it. This is NOT simp
 3. Follow all circuit breakers (3 consecutive failures = BLOCKED, merge conflicts = stop)
 4. All critical rules apply: form coherent work packets, delegate only the packets that benefit from parallel execution, merge after every wave
 
+The build phase continues to use the explicit `EXECUTION_MODEL` resolved by `/bp:build`.
+
 The build phase is where quality matters — no shortcuts here.
 
 ---
@@ -127,11 +144,10 @@ The build phase is where quality matters — no shortcuts here.
 
 If `--skip-inspect` was NOT passed, run the **full inspect phase** exactly as `/bp:inspect` defines it:
 
-1. Gather context (site, blueprints, impl tracking, git history, git diff)
-2. Gap analysis — verify every requirement against actual code
-3. Peer review — find bugs, security issues, quality problems
-4. Generate the full inspect report with verdict (APPROVE / REVISE / REJECT)
-5. Auto-revise blueprints and site if gaps found
+1. Dispatch a `bp:surveyor` subagent with `model: "{REASONING_MODEL}"` for the gap analysis
+2. Dispatch a `bp:inspector` subagent with `model: "{REASONING_MODEL}"` for the peer review
+3. Synthesize both results into the full inspect report with verdict (APPROVE / REVISE / REJECT)
+4. Auto-revise blueprints and site if gaps found
 
 ---
 

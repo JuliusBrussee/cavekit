@@ -7,7 +7,12 @@ description: Compare what was built against what was intended
 
 You are performing a gap analysis: comparing what was actually built (implementation tracking, code, test results) against what was intended (blueprints, acceptance criteria). This identifies where blueprints, plans, or validation fell short and feeds into revision.
 
-Dispatch a `surveyor` agent (via the Task tool) with the following instructions. If the Task tool is unavailable, execute the instructions directly.
+Before dispatching any agent:
+
+1. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" summary` and print that exact line once.
+2. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model reasoning` and treat the result as `REASONING_MODEL`.
+
+Dispatch a `bp:surveyor` agent with `model: "{REASONING_MODEL}"` and the following instructions. If the agent tool is unavailable, execute the instructions directly.
 
 ## Agent Instructions for surveyor
 

@@ -14,6 +14,7 @@ description: Show Blueprint commands and usage
 /bp:architect   →  generate site (the ORDER)
 /bp:build       →  ralph loop (the BUILD)
 /bp:inspect     →  gap analysis + peer review (the CHECK)
+/bp:config      →  show or change execution model presets
 ```
 
 ### Quick Mode
@@ -25,6 +26,26 @@ description: Show Blueprint commands and usage
 ```
 
 Streamlined draft + architect (no interactive Q&A, no user gates) followed by the full build and inspect. Best for small-to-medium features where you trust the decomposition.
+
+### Model Presets
+
+```bash
+/bp:config                         # show effective preset + resolved models
+/bp:config list                    # show built-in presets
+/bp:config preset balanced         # set repo override
+/bp:config preset fast --global    # set your default for all repos
+```
+
+Built-in presets:
+
+| Preset | Reasoning | Execution | Exploration |
+|--------|-----------|-----------|-------------|
+| `expensive` | `opus` | `opus` | `opus` |
+| `quality` | `opus` | `opus` | `sonnet` |
+| `balanced` | `opus` | `sonnet` | `haiku` |
+| `fast` | `sonnet` | `sonnet` | `haiku` |
+
+Precedence: `.blueprint/config` overrides `~/.blueprint/config`, which overrides the built-in default (`quality`).
 
 ## Commands
 
@@ -96,6 +117,18 @@ Runs after build completes. Does two things:
 2. **Peer review** — finds bugs, security issues, performance problems, quality gaps
 
 Produces a verdict: APPROVE / REVISE / REJECT with prioritized findings.
+
+### `/bp:config` — Execution Presets
+
+```bash
+/bp:config
+/bp:config list
+/bp:config preset quality
+/bp:config preset fast --global
+```
+
+Shows or updates the active Blueprint execution preset. Presets map three task buckets:
+`reasoning` for draft/architect/inspect-style work, `execution` for build/task-builder work, and `exploration` for research and codebase scanning helpers.
 
 ### `/bp:progress` — Check Progress
 

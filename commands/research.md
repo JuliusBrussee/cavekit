@@ -22,6 +22,16 @@ If no description is provided, ask: "What are you building? (One sentence is eno
 
 Generate a **topic slug** from the description — kebab-case, 2-4 words. Example: "Build a Verse compiler targeting WASM" → `verse-compiler`. "Add real-time collaboration" → `realtime-collab`.
 
+## Step 0: Resolve Execution Profile
+
+Before dispatching any research agents:
+
+1. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" summary` and print that exact line once.
+2. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model exploration` and treat the result as `EXPLORATION_MODEL`.
+3. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model reasoning` and treat the result as `REASONING_MODEL`.
+
+Use `EXPLORATION_MODEL` for codebase/web researchers and `REASONING_MODEL` for the synthesizer.
+
 ## Step 1: Assess Project Size
 
 Quickly count source files (exclude `node_modules`, `.git`, `dist`, `build`, `vendor`, `__pycache__`, `.next`, `.nuxt`):
@@ -123,12 +133,12 @@ Also ensure `context/refs/` exists.
 
 Dispatch all of these **in parallel** (multiple Agent calls in one message):
 
-**Each codebase agent** (subagent_type: `Explore`, model: `sonnet`):
+**Each codebase agent** (subagent_type: `Explore`, model: `EXPLORATION_MODEL`):
 
 ```
 Agent(
   subagent_type: "Explore",
-  model: "sonnet",
+  model: "{EXPLORATION_MODEL}",
   description: "Research codebase {categories}",
   prompt: "ROLE: Codebase researcher ({categories}) for: {description}
 
@@ -153,12 +163,12 @@ For each finding:
 )
 ```
 
-**Each wave 1 web agent** (subagent_type: `general-purpose`, model: `sonnet`):
+**Each wave 1 web agent** (subagent_type: `general-purpose`, model: `EXPLORATION_MODEL`):
 
 ```
 Agent(
   subagent_type: "general-purpose",
-  model: "sonnet",
+  model: "{EXPLORATION_MODEL}",
   description: "Research web {categories}",
   prompt: "ROLE: Web researcher ({categories}) for: {description}
 
@@ -200,12 +210,12 @@ After all wave 1 agents complete:
 
 Skip this step for `quick` depth.
 
-Dispatch remaining web agents **in parallel** (subagent_type: `general-purpose`, model: `sonnet`):
+Dispatch remaining web agents **in parallel** (subagent_type: `general-purpose`, model: `EXPLORATION_MODEL`):
 
 ```
 Agent(
   subagent_type: "general-purpose",
-  model: "sonnet",
+  model: "{EXPLORATION_MODEL}",
   description: "Research web {categories}",
   prompt: "ROLE: Web researcher ({categories}) for: {description}
 
@@ -252,7 +262,7 @@ Read all raw findings files and the findings board. Dispatch the synthesizer:
 ```
 Agent(
   subagent_type: "general-purpose",
-  model: "opus",
+  model: "{REASONING_MODEL}",
   description: "Synthesize research findings",
   prompt: "ROLE: Research synthesizer for: {description}
 
