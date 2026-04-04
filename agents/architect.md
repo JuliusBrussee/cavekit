@@ -118,11 +118,13 @@ Generate `plan-known-issues.md` with prioritized issues:
 ### 6. Validate Plan Completeness
 Before finishing, verify:
 - Every blueprint requirement has at least one plan task
+- **Every ACCEPTANCE CRITERION within every requirement has at least one plan task that will validate it** — requirement-level mapping is necessary but not sufficient. Walk through each criterion one by one and confirm a task covers it. If a requirement has 5 criteria but only 3 are covered by tasks, add tasks for the remaining 2.
 - Every plan task maps to a blueprint requirement (no orphan tasks)
 - Dependency graph has no cycles
 - [CONDITIONAL] tasks have clear trigger conditions
 - [DYNAMIC] tasks have clear scoping criteria
 - Test strategies cover all acceptance criteria from blueprints
+- **Generate a Coverage Matrix** in the build site listing every acceptance criterion and its assigned task(s). Any criterion without a task is a GAP that must be resolved before the plan is complete.
 
 ## Task Template Rules
 

@@ -13,7 +13,7 @@
 <p align="center">
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <a href="https://docs.anthropic.com/en/docs/claude-code"><img src="https://img.shields.io/badge/Claude_Code-plugin-blueviolet" alt="Claude Code Plugin"></a>
-  <img src="https://img.shields.io/badge/version-2.1.0-green" alt="Version 2.1.0">
+  <img src="https://img.shields.io/badge/version-2.2.0-green" alt="Version 2.2.0">
 </p>
 
 <p align="center">
@@ -189,13 +189,15 @@ For existing codebases, `/bp:draft --from-code` reverse-engineers blueprints fro
 /bp:architect
 ```
 
-Reads all blueprints, breaks requirements into tasks, maps dependencies, and organizes everything into a **tiered build site** — a dependency graph where Tier 0 has no dependencies, Tier 1 depends only on Tier 0, and so on. This is what the build loop consumes.
+Reads all blueprints, breaks requirements into tasks, maps dependencies, and organizes everything into a **tiered build site** — a dependency graph where Tier 0 has no dependencies, Tier 1 depends only on Tier 0, and so on. The build site includes a **Coverage Matrix** that maps every individual acceptance criterion to its task(s), ensuring nothing specified in the blueprints gets lost in translation. This is what the build loop consumes.
 
 ### 3. Build — run the loop
 
 ```
 /bp:build
 ```
+
+Before starting, a **pre-flight coverage check** validates that the build site covers all blueprint acceptance criteria — gaps are flagged before any code is written. After completion, a **post-flight blueprint verification** cross-references what was built against the original blueprints, adding remediation tasks for any criteria that slipped through.
 
 The Ralph Loop. Each iteration:
 

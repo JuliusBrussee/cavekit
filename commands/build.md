@@ -21,6 +21,24 @@ Before starting waves:
 2. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model execution` and treat the result as `EXECUTION_MODEL`.
 3. Use that exact `EXECUTION_MODEL` string in every `bp:task-builder` delegation below. Do not hard-code `opus`, `sonnet`, or `haiku` in this command.
 
+## Pre-flight Coverage Check
+
+Before entering the execution loop, validate that the build site covers all blueprint requirements:
+
+1. Read the build site and all blueprint files referenced in it
+2. If the build site contains a **Coverage Matrix** section, scan it for any rows with status `GAP`
+3. If no Coverage Matrix exists, perform a quick manual check: for each blueprint requirement, confirm at least one task in the build site references it
+4. **If gaps are found**, report them before starting:
+   ```
+   ⚠ COVERAGE GAPS DETECTED — {n} acceptance criteria have no assigned task:
+     - blueprint-{domain}.md R{n}: {criterion text}
+     - blueprint-{domain}.md R{n}: {criterion text}
+   
+   Run `/bp:architect` to regenerate the build site with full coverage, or continue with known gaps.
+   ```
+   Ask the user whether to proceed or stop. Do NOT silently continue with gaps.
+5. If no gaps are found, log: `✓ Pre-flight coverage check passed — all criteria mapped to tasks.`
+
 ## If site selection is required
 
 If the output contains `BLUEPRINT_SITE_SELECTION_REQUIRED=true`, multiple build sites/plans were found. **Ask the user which one to implement.** Then re-run with `--filter <their-choice>`.
@@ -153,6 +171,27 @@ When all tasks in the build site are done:
 Waves executed: {N}
 Tasks completed: {done}/{total}
 ```
+
+### Post-Build: Blueprint Verification
+
+Before updating CLAUDE.md, verify that the build actually satisfies the blueprints:
+
+1. Read all blueprint files and the build site's Coverage Matrix (if present)
+2. For each blueprint requirement and its acceptance criteria, cross-reference against impl tracking:
+   - Is the task marked DONE in impl tracking?
+   - Does the task's scope actually cover this specific criterion? (A task being DONE does not mean every criterion it was supposed to cover is actually met)
+3. Produce a brief coverage summary:
+   ```
+   ═══ Blueprint Verification ═══
+   Requirements: {done}/{total}
+   Acceptance Criteria: {verified}/{total}
+   Gaps: {list any unmet criteria, or "None"}
+   ```
+4. If gaps are found (criteria not covered by completed tasks):
+   - Log each gap with its blueprint reference
+   - Add the gaps as new tasks to the build site (append to the highest tier + 1)
+   - Report: `{n} gap(s) found — {n} remediation tasks added to build site. Run /bp:build again to address.`
+5. If no gaps: proceed to CLAUDE.md hierarchy update
 
 ### Post-Build: Update CLAUDE.md Hierarchy
 

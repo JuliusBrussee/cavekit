@@ -39,6 +39,7 @@ Break each requirement into one or more implementable tasks:
 - Simple requirements (1-2 acceptance criteria) → 1 task
 - Complex requirements (3+ acceptance criteria, multiple concerns) → multiple tasks
 - Each task should be completable in one loop iteration
+- When decomposing, cross-check EACH acceptance criterion in the requirement — ensure at least one task will validate it. A single task covering "R1" is insufficient if R1 has 6 acceptance criteria and the task only addresses 2 of them.
 - For UI tasks: include `**Design Ref:** DESIGN.md Section {N} — {section name}` in the task description to guide the builder on which design patterns apply
 
 Use T-numbered task IDs (T-001, T-002, ...) across all domains.
@@ -107,6 +108,21 @@ last_edited: "{CURRENT_DATE_UTC}"
 | ... | | |
 
 **Total: {n} tasks, {n} tiers**
+
+## Coverage Matrix
+
+Every acceptance criterion from every blueprint requirement MUST appear below with its assigned task(s). If any criterion has no task, the site is incomplete.
+
+| Blueprint | Req | Criterion | Task(s) | Status |
+|-----------|-----|-----------|---------|--------|
+| blueprint-{domain}.md | R1 | {criterion text, abbreviated} | T-001 | COVERED |
+| blueprint-{domain}.md | R1 | {criterion text, abbreviated} | T-001, T-002 | COVERED |
+| blueprint-{domain}.md | R2 | {criterion text, abbreviated} | T-003 | COVERED |
+| blueprint-{domain}.md | R2 | {criterion text, abbreviated} | — | GAP |
+
+**Coverage: {covered}/{total} criteria ({percentage}%)**
+
+If any row shows GAP, add tasks to cover it before proceeding.
 ```
 
 If a site already exists, ask the user whether to overwrite or keep the existing one.
@@ -155,6 +171,8 @@ Run `/bp:build --peer-review` to add Codex review.
 ### Rules
 
 - Every blueprint requirement MUST map to at least one task
+- Every ACCEPTANCE CRITERION within every requirement MUST map to at least one task — requirement-level coverage is not sufficient. A requirement with 5 acceptance criteria needs tasks that collectively cover all 5, not just 1.
+- The Coverage Matrix in the build site must show 100% COVERED status. If any row shows GAP, add tasks before finishing.
 - Tasks should be small — prefer M over XL
 - Dependencies must be genuine blockers, not just ordering preferences
 - The site is the ONLY planning artifact — no domain plans, no file ownership

@@ -77,6 +77,7 @@ Using the feature description + project context, directly:
 - If DESIGN.md exists and the feature involves UI, reference design tokens in acceptance criteria
 - Skip the visual companion, skip approach proposals
 - Skip the blueprint-reviewer subagent loop — you validate inline
+- Count your acceptance criteria — every one must be concrete enough that the architect phase can assign it to a task. If a criterion is vague ("works well", "good UX"), rewrite it to be testable before proceeding.
 - Do a single self-check: no TODOs, no placeholders, no implementation details in requirements
 
 ### 1d: Report (brief)
@@ -114,6 +115,8 @@ Read all blueprint files just written.
 - Dependencies must be genuine blockers
 - For UI tasks, include `Design Ref: DESIGN.md Section {N}` if DESIGN.md exists
 - Skip asking user about existing sites — overwrite if one exists
+- **Coverage gate:** After generating the build site, walk through every acceptance criterion in every blueprint requirement and confirm it maps to at least one task. If any criterion is uncovered, add a task for it before proceeding. This replaces the full blueprint-reviewer loop with a single self-check pass — fast but non-negotiable.
+- Include the Coverage Matrix section in the build site output (same format as the full architect path)
 
 ### 2c: Report (brief)
 
