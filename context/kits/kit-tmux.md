@@ -51,7 +51,7 @@ Managing detached tmux sessions as the execution backend for Claude Code instanc
 **Description:** Send keystrokes and prompts to a detached tmux session.
 **Acceptance Criteria:**
 - [ ] Can send Enter keystroke
-- [ ] Can send arbitrary key sequences (for `/bp:build` command injection)
+- [ ] Can send arbitrary key sequences (for `/ck:make` command injection)
 - [ ] Can send multi-line prompt text
 **Dependencies:** R1
 

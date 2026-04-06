@@ -11,7 +11,7 @@ The mechanism that invokes Codex adversarial review at the end of every build ti
 ## Requirements
 
 ### R1: Tier Boundary Hook
-Invoke Codex adversarial review automatically at the end of every completed tier during `/bp:build`.
+Invoke Codex adversarial review automatically at the end of every completed tier during `/ck:make`.
 - [ ] After all tasks in a tier are merged and impl tracking is updated, trigger a Codex review of the tier's cumulative diff
 - [ ] The diff target is: worktree base to current HEAD (captures everything built in this tier)
 - [ ] The review runs inline (not background) — the build loop waits for results before advancing

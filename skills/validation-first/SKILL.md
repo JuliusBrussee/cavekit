@@ -218,7 +218,7 @@ curl -f http://localhost:{PORT}/health
 
 ## Mapping Spec Requirements to Gates
 
-Every spec requirement must map to at least one validation gate. When writing specs (see `bp:cavekit-writing`), each acceptance criterion should indicate which gate verifies it.
+Every spec requirement must map to at least one validation gate. When writing specs (see `ck:cavekit-writing`), each acceptance criterion should indicate which gate verifies it.
 
 ### Mapping Pattern
 
@@ -423,17 +423,17 @@ The existing `verification-before-completion` skill provides a general framework
 
 **How they work together:**
 - `superpowers:verification-before-completion` ensures the agent checks its work
-- `bp:validation-first` defines exactly what checks to run and in what order
+- `ck:validation-first` defines exactly what checks to run and in what order
 
-### With `bp:cavekit-writing`
+### With `ck:cavekit-writing`
 
 Every spec requirement must have acceptance criteria that map to validation gates. The spec-writing skill defines how to write those criteria. Validation-first design defines how to verify them.
 
-### With `bp:impl-tracking`
+### With `ck:impl-tracking`
 
 Validation results are recorded in the implementation tracking document's Test Health table. Gate failures become Issues. Gate-related dead ends are documented in the Dead Ends section.
 
-### With `bp:methodology`
+### With `ck:methodology`
 
 Validation gates operate continuously across all DABI phases. Phase gates control transitions between phases. The iteration loop uses gate results as convergence signals.
 

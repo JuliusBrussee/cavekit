@@ -55,11 +55,11 @@ func (m *Manager) Start(ctx context.Context, inst *Instance, projectRoot, siteNa
 	if startupDelay > 0 {
 		go func() {
 			time.Sleep(startupDelay)
-			cmd := fmt.Sprintf("/bp:build --filter %s", siteName)
+			cmd := fmt.Sprintf("/ck:make --filter %s", siteName)
 			m.tmux.SendCommand(ctx, siteName, cmd)
 		}()
 	} else {
-		cmd := fmt.Sprintf("/bp:build --filter %s", siteName)
+		cmd := fmt.Sprintf("/ck:make --filter %s", siteName)
 		m.tmux.SendCommand(ctx, siteName, cmd)
 	}
 

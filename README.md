@@ -63,13 +63,13 @@ The agent guessed what you wanted.
 ### With Cavekit
 
 ```
-> /bp:draft
+> /ck:sketch
   4 kits, 22 requirements, 69 criteria
 
-> /bp:architect
+> /ck:map
   34 tasks across 5 dependency tiers
 
-> /bp:build
+> /ck:make
   18 iterations — each validated against
   the spec before committing
 
@@ -108,7 +108,7 @@ Instead of "prompt and pray," Cavekit puts a **specification layer** between you
 ```
                         ┌─── Task 1 ─── Agent A ───┐
                         │                           │
-You ── /bp:draft ──► Kits ── /bp:architect ──► Build Site ──┤─── Task 2 ─── Agent B ───┤──► done
+You ── /ck:sketch ──► Kits ── /ck:map ──► Build Site ──┤─── Task 2 ─── Agent B ───┤──► done
                         │                           │
                         └─── Task 3 ─── Agent C ───┘
 ```
@@ -142,7 +142,7 @@ Four phases. Each one a slash command.
   RESEARCH         DRAFT            ARCHITECT           BUILD              INSPECT
   ────────         ─────            ─────────           ─────              ───────
   (optional)       "What are we     Break into tasks,   Auto-parallel:     Gap analysis:
-  Multi-agent       building?"      map dependencies,    /bp:build          built vs.
+  Multi-agent       building?"      map dependencies,    /ck:make          built vs.
   codebase +                        organize into        groups work        intended.
   web research     Produces:        tiered build site    into adaptive      Peer review.
                    kits with        + dependency graph   subagent packets   Trace to specs.
@@ -156,42 +156,42 @@ Four phases. Each one a slash command.
 ### 0. Research — ground the design (optional)
 
 ```
-/bp:research "build a C+ compiler"
+/ck:research "build a C+ compiler"
 ```
 
 Dispatches 2–8 parallel subagents to explore the codebase and search the web for best practices, library landscape, reference implementations, and common pitfalls. A synthesizer agent cross-validates findings and produces a research brief in `context/refs/`.
 
-### /bp:design — establish the design system
+### /ck:design — establish the design system
 
 ```
-/bp:design
+/ck:design
 ```
 
 Creates or imports a **DESIGN.md** design system — a cross-cutting constraint layer enforced across the entire pipeline. Every kit references its design tokens, every task carries a Design Ref, every build result is audited for violations.
 
 | Sub-command | What it does |
 |------------|-------------|
-| `/bp:design create` | Generate new DESIGN.md via guided Q&A |
-| `/bp:design import` | Extract DESIGN.md from existing codebase |
-| `/bp:design audit` | Check implementation against DESIGN.md |
-| `/bp:design update` | Revise DESIGN.md, log to changelog |
+| `/ck:design create` | Generate new DESIGN.md via guided Q&A |
+| `/ck:design import` | Extract DESIGN.md from existing codebase |
+| `/ck:design audit` | Check implementation against DESIGN.md |
+| `/ck:design update` | Revise DESIGN.md, log to changelog |
 
 ### 1. Draft — define the what
 
 ```
-/bp:draft
+/ck:sketch
 ```
 
 Describe what you're building in natural language. Cavekit decomposes it into **domain kits** — structured documents with numbered requirements (R1, R2, ...) and testable acceptance criteria. Stack-independent. Human-readable.
 
 After internal review, kits go to Codex for a [design challenge](#design-challenge--catch-spec-flaws-before-building) — adversarial review that catches decomposition flaws, missing requirements, and ambiguous criteria before any code is written.
 
-For existing codebases: `/bp:draft --from-code` reverse-engineers kits from your code and identifies gaps.
+For existing codebases: `/ck:sketch --from-code` reverse-engineers kits from your code and identifies gaps.
 
 ### 2. Architect — plan the order
 
 ```
-/bp:architect
+/ck:map
 ```
 
 Reads all kits. Breaks requirements into tasks. Maps dependencies. Organizes into a **tiered build site** — a dependency graph where Tier 0 has no deps, Tier 1 depends only on Tier 0, and so on. Includes a **Coverage Matrix** mapping every acceptance criterion to its task(s). Nothing specified gets lost in translation.
@@ -199,7 +199,7 @@ Reads all kits. Breaks requirements into tasks. Maps dependencies. Organizes int
 ### 3. Build — run the loop
 
 ```
-/bp:build
+/ck:make
 ```
 
 Pre-flight coverage check validates all acceptance criteria are covered. Then the loop runs:
@@ -235,7 +235,7 @@ Post-flight verification cross-references what was built against original kits. 
 ### 4. Inspect — verify the result
 
 ```
-/bp:inspect
+/ck:check
 ```
 
 Gap analysis: built vs. specified. Peer review: bugs, security, missed requirements. Everything traced back to kit requirements.
@@ -247,20 +247,20 @@ Gap analysis: built vs. specified. Peer review: bugs, security, missed requireme
 **Greenfield:**
 
 ```
-> /bp:draft
+> /ck:sketch
 What are you building?
 
 > A REST API for task management. Users, projects, tasks
   with priorities and due dates. PostgreSQL.
 
 Created 4 kits (22 requirements, 69 acceptance criteria)
-Next: /bp:architect
+Next: /ck:map
 
-> /bp:architect
+> /ck:map
 Generated build site: 34 tasks, 5 tiers
-Next: /bp:build
+Next: /ck:make
 
-> /bp:build
+> /ck:make
 Loop activated — 34 tasks, 20 max iterations.
 ...
 All tasks done. Build passes. Tests pass.
@@ -270,14 +270,14 @@ CAVEKIT COMPLETE — 34 tasks in 18 iterations.
 **Existing codebase:**
 
 ```
-> /bp:draft --from-code
+> /ck:sketch --from-code
 Exploring codebase... Next.js 14, Prisma, NextAuth.
 Created 6 kits — 4 requirements are gaps (not yet implemented).
 
-> /bp:architect --filter collaboration
+> /ck:map --filter collaboration
 Generated build site: 8 tasks, 3 tiers
 
-> /bp:build
+> /ck:make
 CAVEKIT COMPLETE — 8 tasks in 8 iterations.
 ```
 
@@ -287,7 +287,7 @@ See [example.md](example.md) for full annotated sessions.
 
 ## Parallel Execution
 
-`/bp:build` parallelizes automatically. Multiple ready tasks get grouped into coherent work packets and dispatched concurrently.
+`/ck:make` parallelizes automatically. Multiple ready tasks get grouped into coherent work packets and dispatched concurrently.
 
 ```
 ═══ Wave 1 ═══
@@ -452,9 +452,9 @@ Settings live in two places:
 | `fast` | `sonnet` | `sonnet` | `haiku` |
 
 ```
-/bp:config                      # show current
-/bp:config preset balanced      # change preset
-/bp:config preset fast --global # change default
+/ck:config                      # show current
+/ck:config preset balanced      # change preset
+/ck:config preset fast --global # change default
 ```
 
 ---
@@ -465,18 +465,18 @@ Settings live in two places:
 
 | Command | Phase | What it does |
 |---------|-------|-------------|
-| `/bp:research` | Research | Multi-agent codebase + web research, produces brief |
-| `/bp:design` | Design | Create, import, audit, or update DESIGN.md |
-| `/bp:draft` | Draft | Decompose requirements into domain kits |
-| `/bp:architect` | Architect | Generate tiered build site from kits |
-| `/bp:build` | Build | Auto-parallel build with validation loop |
-| `/bp:inspect` | Inspect | Gap analysis + peer review against kits |
-| `/bp:config` | — | Show or update execution preset |
-| `/bp:codex-review` | — | Standalone Codex adversarial review on diff |
-| `/bp:progress` | — | Check build site progress |
-| `/bp:gap-analysis` | — | Compare built vs. intended |
-| `/bp:revise` | — | Trace manual fixes back into kits |
-| `/bp:help` | — | Usage guide |
+| `/ck:research` | Research | Multi-agent codebase + web research, produces brief |
+| `/ck:design` | Design | Create, import, audit, or update DESIGN.md |
+| `/ck:sketch` | Draft | Decompose requirements into domain kits |
+| `/ck:map` | Architect | Generate tiered build site from kits |
+| `/ck:make` | Build | Auto-parallel build with validation loop |
+| `/ck:check` | Inspect | Gap analysis + peer review against kits |
+| `/ck:config` | — | Show or update execution preset |
+| `/ck:judge` | — | Standalone Codex adversarial review on diff |
+| `/ck:progress` | — | Check build site progress |
+| `/ck:scan` | — | Compare built vs. intended |
+| `/ck:revise` | — | Trace manual fixes back into kits |
+| `/ck:help` | — | Usage guide |
 
 ### CLI
 

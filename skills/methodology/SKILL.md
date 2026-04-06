@@ -185,26 +185,26 @@ Cavekit is composed of techniques that work together. This methodology skill is 
 
 | Skill | Purpose | When to Use |
 |-------|---------|-------------|
-| `bp:cavekit-writing` | Write implementation-agnostic kits with testable acceptance criteria | Draft phase — always the first step |
-| `bp:context-architecture` | Organize context for progressive disclosure | Project setup and ongoing maintenance |
-| `bp:impl-tracking` | Track implementation progress, dead ends, test health | Build and Inspect phases |
-| `bp:validation-first` | Design validation gates agents can execute | All phases — validation is continuous |
+| `ck:cavekit-writing` | Write implementation-agnostic kits with testable acceptance criteria | Draft phase — always the first step |
+| `ck:context-architecture` | Organize context for progressive disclosure | Project setup and ongoing maintenance |
+| `ck:impl-tracking` | Track implementation progress, dead ends, test health | Build and Inspect phases |
+| `ck:validation-first` | Design validation gates agents can execute | All phases — validation is continuous |
 
 ### Pipeline Skills
 
 | Skill | Purpose | When to Use |
 |-------|---------|-------------|
-| `bp:prompt-pipeline` | Design numbered prompt pipelines for DABI | Setting up automation |
-| `bp:revision` | Trace bugs back to kits and fix at the source | Inspect phase — after finding gaps |
+| `ck:prompt-pipeline` | Design numbered prompt pipelines for DABI | Setting up automation |
+| `ck:revision` | Trace bugs back to kits and fix at the source | Inspect phase — after finding gaps |
 | `cavekit:brownfield-adoption` | Adopt Cavekit on existing codebases | Starting Cavekit on legacy projects |
 
 ### Advanced Skills
 
 | Skill | Purpose | When to Use |
 |-------|---------|-------------|
-| `bp:peer-review` | Use a second agent to challenge the first | Quality gates, architecture review |
+| `ck:peer-review` | Use a second agent to challenge the first | Quality gates, architecture review |
 | `cavekit:speculative-pipeline` | Stagger pipeline stages for parallelism | Optimizing long pipelines |
-| `bp:convergence-monitoring` | Detect convergence vs ceiling | Monitoring iteration loops |
+| `ck:convergence-monitoring` | Detect convergence vs ceiling | Monitoring iteration loops |
 | `cavekit:documentation-inversion` | Turn documentation into agent-consumable skills | Library/module documentation |
 
 ### Integration with Existing Skills
@@ -236,11 +236,11 @@ Cavekit works **with** existing skills, not as a replacement:
    └── prompts/        # DABI pipeline prompts
    ```
 
-2. **Write kits** from your reference materials (see `bp:cavekit-writing`)
-3. **Generate plans** from kits (see `bp:prompt-pipeline`)
-4. **Implement** with validation gates (see `bp:validation-first`)
-5. **Track progress** in implementation documents (see `bp:impl-tracking`)
-6. **Iterate** — when gaps are found, revise kits (see `bp:revision`)
+2. **Write kits** from your reference materials (see `ck:cavekit-writing`)
+3. **Generate plans** from kits (see `ck:prompt-pipeline`)
+4. **Implement** with validation gates (see `ck:validation-first`)
+5. **Track progress** in implementation documents (see `ck:impl-tracking`)
+6. **Iterate** — when gaps are found, revise kits (see `ck:revision`)
 
 ### For an Existing Project (Brownfield)
 

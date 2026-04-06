@@ -24,7 +24,7 @@ The session (or "instance") model that ties together a tmux session, git worktre
 **Description:** Create, start, pause, resume, and kill instances.
 **Acceptance Criteria:**
 - [ ] Creating an instance: allocates title, sets site path, derives worktree name
-- [ ] Starting: creates worktree (if needed), creates tmux session, sends `/bp:build --filter {name}` after startup delay
+- [ ] Starting: creates worktree (if needed), creates tmux session, sends `/ck:make --filter {name}` after startup delay
 - [ ] Pausing: detaches tmux session from TUI tracking (session keeps running)
 - [ ] Resuming: re-attaches tmux session to TUI tracking
 - [ ] Killing: kills tmux session, optionally removes worktree and branch
@@ -40,7 +40,7 @@ The session (or "instance") model that ties together a tmux session, git worktre
 **Dependencies:** R1
 
 ### R4: Staggered Launch
-**Description:** When multiple instances are created at once, stagger their `/bp:build` commands to avoid resource contention.
+**Description:** When multiple instances are created at once, stagger their `/ck:make` commands to avoid resource contention.
 **Acceptance Criteria:**
 - [ ] Configurable delay between launches (default 5 seconds)
 - [ ] First instance starts immediately, subsequent ones wait

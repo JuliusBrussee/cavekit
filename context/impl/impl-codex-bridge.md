@@ -14,7 +14,7 @@ last_edited: "2026-03-31T00:00:00Z"
 | T-006 | DONE | Codex review invocation with finding parser. scripts/codex-review.sh |
 | T-007 | DONE | Finding format with source/tier columns. scripts/codex-findings.sh |
 | T-008 | DONE | Peer-review-loop replacement: Codex CLI primary, MCP legacy fallback. setup-build.sh + SKILL.md |
-| T-009 | DONE | /bp:codex-review standalone command. commands/codex-review.md |
+| T-009 | DONE | /ck:judge standalone command. commands/codex-review.md |
 | T-010 | DONE | Tier boundary hook in build loop. commands/build.md |
 | T-011 | DONE | Severity-based gating with fix-task generation. scripts/codex-gate.sh + build.md |
 | T-012 | DONE | Review-fix cycle with re-review and max iterations. bp_review_fix_cycle in codex-gate.sh |

@@ -34,7 +34,7 @@ When Codex is available, it becomes the sole adversary in Cavekit's peer-review-
 - [ ] Findings tagged with `source: codex` in `impl-review-findings.md`
 
 ### R4: Standalone Review Command
-A `/bp:codex-review` command that invokes Codex adversarial review on demand.
+A `/ck:judge` command that invokes Codex adversarial review on demand.
 - [ ] Default target: current build tier's diff against worktree base
 - [ ] Accept `--base <ref>` override for custom diff range
 - [ ] Output findings in Cavekit's standard finding format to stdout

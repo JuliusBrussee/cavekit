@@ -6,12 +6,12 @@ last_edited: "2026-03-20T00:00:00Z"
 # Cavekit: Spec Sync
 
 ## Scope
-Making kits the living source of truth for the repository. Kits always reflect the current state of the system. Changes flow bidirectionally — specs drive builds, and code changes flow back into specs via `/bp:revise`. Each cavekit maintains a changelog tracking its evolution over time.
+Making kits the living source of truth for the repository. Kits always reflect the current state of the system. Changes flow bidirectionally — specs drive builds, and code changes flow back into specs via `/ck:revise`. Each cavekit maintains a changelog tracking its evolution over time.
 
 ## Requirements
 
 ### R1: Spec-Aware Revision
-**Description:** `/bp:revise` scans recent git commits (since last revision) and identifies which cavekit requirements are affected by the changes. It updates those requirements to reflect the current implementation, replacing outdated descriptions and acceptance criteria with what actually exists now.
+**Description:** `/ck:revise` scans recent git commits (since last revision) and identifies which cavekit requirements are affected by the changes. It updates those requirements to reflect the current implementation, replacing outdated descriptions and acceptance criteria with what actually exists now.
 **Acceptance Criteria:**
 - [ ] Given commits that changed a module's behavior, running revise updates the relevant cavekit requirements to describe the new behavior
 - [ ] Requirements not affected by recent changes remain untouched
@@ -25,7 +25,7 @@ Making kits the living source of truth for the repository. Kits always reflect t
 - [ ] Changelog entries include: ISO date, affected requirement IDs, summary of change, and commit SHAs
 - [ ] Changelog is append-only — entries are never modified or removed
 - [ ] The requirements section contains only current-state descriptions (no versioning, no "was previously X")
-- [ ] New kits created via `/bp:draft` start with an empty `## Changelog` section
+- [ ] New kits created via `/ck:sketch` start with an empty `## Changelog` section
 **Dependencies:** none
 
 ### R3: Cavekit Overview Consistency
@@ -50,7 +50,7 @@ Making kits the living source of truth for the repository. Kits always reflect t
 - Auto-triggering revise via hooks (it is always an explicit command)
 - Modifying the build site automatically (that is the architect's responsibility)
 - Tracking non-code changes (design files, external documentation)
-- Brownfield reverse-engineering (that is `/bp:draft --from-code`, a separate flow)
+- Brownfield reverse-engineering (that is `/ck:sketch --from-code`, a separate flow)
 
 ## Cross-References
 - See also: cavekit-build-lifecycle.md (worktree changes must be merged to main before revise can scan them)

@@ -125,15 +125,15 @@ Telegraphic. Every word earn its place or die.
 
 When caveman_mode is enabled in Cavekit config (on by default), caveman-speak is automatically applied to:
 
-- **Build phase** (`/bp:build`): wave logs, iteration summaries, task status reports
-- **Inspect phase** (`/bp:inspect`): gap analysis summaries, peer review output
+- **Build phase** (`/ck:make`): wave logs, iteration summaries, task status reports
+- **Inspect phase** (`/ck:check`): gap analysis summaries, peer review output
 - **Subagent communication**: all inter-agent status reports, merge summaries, wave completions
 - **Loop logging**: compressed entries in `context/impl/loop-log.md`
 - **Codex prompt framing**: setup text around review prompts (not the code or structured findings)
 
 Caveman is NOT applied to:
-- **Draft phase** (`/bp:draft`): kits are human-reviewed specs, need normal prose
-- **Architect phase** (`/bp:architect`): build sites are source of truth, need clarity
+- **Draft phase** (`/ck:sketch`): kits are human-reviewed specs, need normal prose
+- **Architect phase** (`/ck:map`): build sites are source of truth, need clarity
 - **Code blocks**: code is always written normally
 - **Spec artifacts**: kits, build sites, DESIGN.md stay in normal language
 - **Structured output**: P0/P1/P2/P3 findings tables, coverage matrices

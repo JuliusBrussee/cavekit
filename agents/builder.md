@@ -1,6 +1,6 @@
 ---
 name: builder
-description: Implements the highest-priority unblocked work from plans. Use when running /bp:build command.
+description: Implements the highest-priority unblocked work from plans. Use when running /ck:make command.
 model: opus
 tools: [All tools]
 ---

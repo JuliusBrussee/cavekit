@@ -35,7 +35,7 @@ last_edited: "2026-03-31T00:00:00Z"
 | Task | Title | Cavekit | Requirement | blockedBy | Effort |
 |------|-------|-----------|-------------|-----------|--------|
 | T-008 | Peer-review-loop replacement (Codex replaces MCP adversary) | cavekit-codex-bridge.md | R3 | T-005, T-006 | M |
-| T-009 | `/bp:codex-review` standalone command | cavekit-codex-bridge.md | R4 | T-005, T-006 | M |
+| T-009 | `/ck:judge` standalone command | cavekit-codex-bridge.md | R4 | T-005, T-006 | M |
 | T-010 | Tier boundary hook in build loop | cavekit-tier-gate.md | R1 | T-006, T-007 | M |
 
 ---
@@ -115,4 +115,4 @@ graph LR
 | tier-gate | R4 (Finding Integration) | T-007 |
 
 ### Next Step
-Run `/bp:build` to start implementation (auto-parallelizes independent tasks).
+Run `/ck:make` to start implementation (auto-parallelizes independent tasks).

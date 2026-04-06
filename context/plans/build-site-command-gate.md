@@ -107,5 +107,5 @@ This site depends on `build-site-codex.md` tasks T-001 and T-002 (Codex binary d
 | command-gate | R7 (Configuration) | T-103, T-110 |
 
 ### Next Step
-Run `/bp:build` to start implementation.
+Run `/ck:make` to start implementation.
 If building alongside the Codex review integration, run both sites — Tier 0 tasks are independent.

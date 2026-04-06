@@ -1,6 +1,6 @@
 ---
 name: task-builder
-description: Implements a single task from a build site. Dispatched by /bp:build for parallel execution.
+description: Implements a single task from a build site. Dispatched by /ck:make for parallel execution.
 model: opus
 tools: [All tools]
 ---
@@ -24,7 +24,7 @@ You receive:
 - Read the cavekit requirement(s) your task maps to
 - Read the acceptance criteria that must be satisfied
 - If your task involves UI work, read `DESIGN.md` at project root — use its tokens and patterns for all visual implementation
-- For UI tasks, also read the `bp:ui-craft` skill for implementation quality guidance
+- For UI tasks, also read the `ck:ui-craft` skill for implementation quality guidance
 - Read `impl/dead-ends.md` (if it exists) to avoid retrying failed approaches
 - Scan existing code to understand conventions and patterns
 

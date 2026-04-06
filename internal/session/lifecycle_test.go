@@ -70,13 +70,13 @@ func TestManager_Start(t *testing.T) {
 	for _, c := range mock.Calls {
 		if c.Name == "tmux" {
 			args := strings.Join(c.Args, " ")
-			if strings.Contains(args, "/bp:build") && strings.Contains(args, "auth") {
+			if strings.Contains(args, "/ck:make") && strings.Contains(args, "auth") {
 				foundBuild = true
 			}
 		}
 	}
 	if !foundBuild {
-		t.Error("should have sent /bp:build command to tmux")
+		t.Error("should have sent /ck:make command to tmux")
 	}
 }
 

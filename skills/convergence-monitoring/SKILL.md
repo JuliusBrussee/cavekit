@@ -407,7 +407,7 @@ With revision:
 ## Cross-References
 
 - **Convergence patterns reference:** See `references/convergence-patterns.md` for the complete convergence pattern catalog with examples.
-- **Revision:** See `bp:revision` skill for how tracing bugs to specs improves convergence.
-- **Prompt pipeline:** See `bp:prompt-pipeline` skill for designing prompts with proper exit criteria and completion signals.
-- **Validation-first design:** See `bp:validation-first` skill for building validation gates that provide convergence signals.
-- **Impl tracking:** See `bp:impl-tracking` skill for tracking progress and detecting ceiling conditions.
+- **Revision:** See `ck:revision` skill for how tracing bugs to specs improves convergence.
+- **Prompt pipeline:** See `ck:prompt-pipeline` skill for designing prompts with proper exit criteria and completion signals.
+- **Validation-first design:** See `ck:validation-first` skill for building validation gates that provide convergence signals.
+- **Impl tracking:** See `ck:impl-tracking` skill for tracking progress and detecting ceiling conditions.

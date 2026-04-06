@@ -462,8 +462,8 @@ Track your brownfield adoption progress with these milestones:
 
 ## Cross-References
 
-- **Context architecture:** See `bp:context-architecture` skill for the full context directory structure and progressive disclosure patterns.
-- **Prompt pipeline:** See `bp:prompt-pipeline` skill for designing the 001-003 prompts after bootstrap.
-- **Cavekit writing:** See `bp:cavekit-writing` skill for how to write high-quality kits with testable acceptance criteria.
-- **Revision:** See `bp:revision` skill for tracing bugs back to kits after brownfield adoption.
-- **Convergence monitoring:** See `bp:convergence-monitoring` skill for detecting when the bootstrap prompt has converged.
+- **Context architecture:** See `ck:context-architecture` skill for the full context directory structure and progressive disclosure patterns.
+- **Prompt pipeline:** See `ck:prompt-pipeline` skill for designing the 001-003 prompts after bootstrap.
+- **Cavekit writing:** See `ck:cavekit-writing` skill for how to write high-quality kits with testable acceptance criteria.
+- **Revision:** See `ck:revision` skill for tracing bugs back to kits after brownfield adoption.
+- **Convergence monitoring:** See `ck:convergence-monitoring` skill for detecting when the bootstrap prompt has converged.

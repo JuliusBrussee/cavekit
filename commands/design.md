@@ -1,8 +1,10 @@
 ---
-name: bp-design
+name: ck-design
 description: "Create or update the project's DESIGN.md — the visual design system spec that constrains all UI implementation"
 argument-hint: "[--import <name>] [--from-site <url>] [--audit] [--section <1-9>]"
 ---
+
+> **Note:** `/bp:design` is deprecated and will be removed in a future version. Use `/ck:design` instead.
 
 # Cavekit Design — Create or Update DESIGN.md
 
@@ -40,9 +42,9 @@ Extract from `$ARGUMENTS`:
 - `--section <1-9>` → **Update mode**: update a specific section of an existing DESIGN.md
 - No arguments → **Interactive mode** (Step 3c): collaborative design conversation
 
-If `--audit` is set and no DESIGN.md exists, report: "No DESIGN.md found. Run `/bp:design` to create one." and stop.
+If `--audit` is set and no DESIGN.md exists, report: "No DESIGN.md found. Run `/ck:design` to create one." and stop.
 
-If `--section` is set and no DESIGN.md exists, report: "No DESIGN.md found. Run `/bp:design` to create the full design system first." and stop.
+If `--section` is set and no DESIGN.md exists, report: "No DESIGN.md found. Run `/ck:design` to create the full design system first." and stop.
 
 ## Step 3a: Import from Collection
 
@@ -168,7 +170,7 @@ Agent(
   prompt: |
     Write a complete DESIGN.md file following the 9-section Google Stitch format.
     
-    Use the bp:design-system skill for the format template and quality standards.
+    Use the ck:design-system skill for the format template and quality standards.
     
     DESIGN DECISIONS:
     {all approved design decisions from the conversation}
@@ -193,7 +195,7 @@ After writing, dispatch a **design-reviewer** subagent to verify quality:
 
 ```
 Agent(
-  subagent_type: "bp:design-reviewer",
+  subagent_type: "ck:design-reviewer",
   model: "{REASONING_MODEL}",
   description: "Review DESIGN.md",
   prompt: |
@@ -227,7 +229,7 @@ Wait for response. If changes requested, make them and re-run Step 5.
    ## Conventions
    - DESIGN.md at project root is the canonical source
    - All UI implementation must reference DESIGN.md tokens and patterns
-   - Updated via /bp:design or automatically during /bp:inspect and /bp:revise
+   - Updated via /ck:design or automatically during /ck:check and /ck:revise
    - Agents read this before implementing any user-facing component
    ```
 
@@ -239,7 +241,7 @@ Wait for response. If changes requested, make them and re-run Step 5.
 
    | Date | Section | Change | Source |
    |------|---------|--------|--------|
-   | {today} | All | Initial design system created | /bp:design |
+   | {today} | All | Initial design system created | /ck:design |
    ```
 
 4. **Report:**
@@ -254,9 +256,9 @@ Wait for response. If changes requested, make them and re-run Step 5.
    **Responsive Breakpoints:** {count}
 
    ### Next Steps
-   - Run `/bp:draft` to create kits — they'll reference this design system
-   - Run `/bp:design --audit` anytime to check design system health
-   - Run `/bp:design --section N` to update a specific section
+   - Run `/ck:sketch` to create kits — they'll reference this design system
+   - Run `/ck:design --audit` anytime to check design system health
+   - Run `/ck:design --section N` to update a specific section
    ```
 
 ---

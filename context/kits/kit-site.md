@@ -77,7 +77,7 @@ The following requirements were added after tracing manual bug fixes back to spe
 - **R6 (deterministic ties)**: Added to prevent non-deterministic ranking when multiple candidates score equally
 
 ## Out of Scope
-- Site creation (handled by `/bp:architect`)
+- Site creation (handled by `/ck:map`)
 - Site modification/updating
 - Spec file parsing (site references specs but doesn't need their content)
 

@@ -1,7 +1,9 @@
 ---
-name: bp-revise
+name: ck-revise
 description: Trace recent manual code fixes back into kits and context files
 ---
+
+> **Note:** `/bp:revise` is deprecated and will be removed in a future version. Use `/ck:revise` instead.
 
 # Cavekit Revise — Trace Fixes to Kits
 
@@ -110,7 +112,7 @@ If the fix involves visual changes and `DESIGN.md` exists:
 - If the fix reveals an incorrect token value, update it
 - Log all changes to `context/designs/design-changelog.md`:
   ```markdown
-  | {date} | Section {N} | {what changed} | /bp:revise (commit {SHA}) |
+  | {date} | Section {N} | {what changed} | /ck:revise (commit {SHA}) |
   ```
 - Update the `last_edited` frontmatter date in DESIGN.md
 

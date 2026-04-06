@@ -1,8 +1,10 @@
 ---
-name: bp-progress
+name: ck-progress
 description: "Show progress against the build site or plan — tasks done, in progress, blocked, remaining"
 argument-hint: "[--filter PATTERN]"
 ---
+
+> **Note:** `/bp:progress` is deprecated and will be removed in a future version. Use `/ck:progress` instead.
 
 # Cavekit Progress
 
@@ -12,7 +14,7 @@ Show the user a progress report by comparing the build site against implementati
 
 Look in `context/plans/` then `context/sites/` for `*site*`, `*plan*`, or `*frontier*` files (exclude `*overview*`). If `--filter` is set (parse from `$ARGUMENTS`), match against it.
 
-If no site/plan found: "No build site or plan found. Run `/bp:architect` first."
+If no site/plan found: "No build site or plan found. Run `/ck:map` first."
 
 ## Step 2: Read State
 

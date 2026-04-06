@@ -190,26 +190,26 @@ bp_design_challenge() {
     case "$1" in
       --kits-dir) kits_dir="$2"; shift 2 ;;
       --help|-h) _design_challenge_usage; return 0 ;;
-      *) echo "[bp:design-challenge] Unknown argument: $1" >&2; return 2 ;;
+      *) echo "[ck:design-challenge] Unknown argument: $1" >&2; return 2 ;;
     esac
   done
 
   # Check availability
   if [[ "$codex_available" != "true" ]]; then
-    echo "[bp:design-challenge] Codex unavailable — skipping design challenge."
+    echo "[ck:design-challenge] Codex unavailable — skipping design challenge."
     return 2
   fi
 
   local review_mode
   review_mode="$(bp_config_get codex_review auto)"
   if [[ "$review_mode" == "off" ]]; then
-    echo "[bp:design-challenge] Codex review disabled (codex_review=off). Skipping."
+    echo "[ck:design-challenge] Codex review disabled (codex_review=off). Skipping."
     return 2
   fi
 
   # Gather kits
   if [[ ! -d "$kits_dir" ]]; then
-    echo "[bp:design-challenge] No kits directory at $kits_dir" >&2
+    echo "[ck:design-challenge] No kits directory at $kits_dir" >&2
     return 2
   fi
 
@@ -223,11 +223,11 @@ bp_design_challenge() {
   done
 
   if [[ $file_count -eq 0 ]]; then
-    echo "[bp:design-challenge] No cavekit files found in $kits_dir" >&2
+    echo "[ck:design-challenge] No cavekit files found in $kits_dir" >&2
     return 2
   fi
 
-  echo "[bp:design-challenge] Sending $file_count cavekit(s) to Codex for design challenge..."
+  echo "[ck:design-challenge] Sending $file_count cavekit(s) to Codex for design challenge..."
 
   # Build the full prompt
   local full_prompt
@@ -242,14 +242,14 @@ bp_design_challenge() {
   local codex_cmd=(codex --approval-mode full-auto --model "$model" --quiet -p "$full_prompt")
 
   if [[ "${BP_CODEX_DRY_RUN:-}" == "1" ]]; then
-    echo "[bp:design-challenge] DRY RUN — would send $file_count kits to Codex"
+    echo "[ck:design-challenge] DRY RUN — would send $file_count kits to Codex"
     return 0
   fi
 
   local raw_output
   raw_output="$(echo "" | "${codex_cmd[@]}" 2>&1)" || {
-    echo "[bp:design-challenge] Codex invocation failed. Skipping design challenge."
-    echo "[bp:design-challenge] Error: ${raw_output:0:500}"
+    echo "[ck:design-challenge] Codex invocation failed. Skipping design challenge."
+    echo "[ck:design-challenge] Error: ${raw_output:0:500}"
     return 2
   }
 
@@ -262,11 +262,11 @@ bp_design_challenge() {
   findings="$(bp_parse_challenge_findings "$raw_output")"
 
   if [[ -z "$findings" ]]; then
-    echo "[bp:design-challenge] Codex found no design issues. Clean review. (${duration}s)"
+    echo "[ck:design-challenge] Codex found no design issues. Clean review. (${duration}s)"
     return 0
   fi
 
-  echo "[bp:design-challenge] Challenge complete in ${duration}s: ${_BP_CHALLENGE_CRITICAL_COUNT} critical, ${_BP_CHALLENGE_ADVISORY_COUNT} advisory"
+  echo "[ck:design-challenge] Challenge complete in ${duration}s: ${_BP_CHALLENGE_CRITICAL_COUNT} critical, ${_BP_CHALLENGE_ADVISORY_COUNT} advisory"
 
   # Output findings
   echo ""
@@ -397,7 +397,7 @@ bp_design_challenge_cycle() {
 
   while (( cycle < max_cycles )); do
     cycle=$((cycle + 1))
-    echo "[bp:design-challenge] Challenge cycle ${cycle}/${max_cycles}"
+    echo "[ck:design-challenge] Challenge cycle ${cycle}/${max_cycles}"
 
     # Run the challenge
     local challenge_output
@@ -409,7 +409,7 @@ bp_design_challenge_cycle() {
     case $rc in
       0)
         # No critical issues — collect advisory for user display
-        echo "[bp:design-challenge] Cycle ${cycle}: No critical issues."
+        echo "[ck:design-challenge] Cycle ${cycle}: No critical issues."
         return 0
         ;;
       2)
@@ -423,7 +423,7 @@ bp_design_challenge_cycle() {
         table_lines="$(echo "$challenge_output" | sed -n '/=== Design Challenge Findings ===/,/=== End of Findings ===/p' | grep -E '^\|' | grep -vE '^\| Category' | grep -vE '^\|--')"
 
         if [[ -z "$table_lines" ]]; then
-          echo "[bp:design-challenge] Could not extract findings from output."
+          echo "[ck:design-challenge] Could not extract findings from output."
           return 1
         fi
 
@@ -442,12 +442,12 @@ bp_design_challenge_cycle() {
         bp_collect_challenge_findings "$parsed"
 
         if [[ $_BP_CHALLENGE_CRITICAL_COUNT -eq 0 ]]; then
-          echo "[bp:design-challenge] Cycle ${cycle}: Only advisory findings remain."
+          echo "[ck:design-challenge] Cycle ${cycle}: Only advisory findings remain."
           return 0
         fi
 
         if (( cycle < max_cycles )); then
-          echo "[bp:design-challenge] ${_BP_CHALLENGE_CRITICAL_COUNT} critical finding(s) need fixes."
+          echo "[ck:design-challenge] ${_BP_CHALLENGE_CRITICAL_COUNT} critical finding(s) need fixes."
           echo "CRITICAL_FIXES:"
           bp_format_critical_for_fix
           echo "AWAITING_FIXES"
@@ -459,8 +459,8 @@ bp_design_challenge_cycle() {
   done
 
   # Exhausted max cycles — report remaining
-  echo "[bp:design-challenge] WARNING: ${_BP_CHALLENGE_CRITICAL_COUNT} critical finding(s) remain after ${max_cycles} cycles."
-  echo "[bp:design-challenge] Presenting remaining findings to user for judgment."
+  echo "[ck:design-challenge] WARNING: ${_BP_CHALLENGE_CRITICAL_COUNT} critical finding(s) remain after ${max_cycles} cycles."
+  echo "[ck:design-challenge] Presenting remaining findings to user for judgment."
 
   if [[ -n "${_BP_CHALLENGE_CRITICAL_FINDINGS:-}" ]]; then
     echo ""
@@ -482,7 +482,7 @@ bp_design_challenge_cycle() {
 }
 
 # ── T-306: Draft Flow Integration Point ───────────────────────────────
-# Entry point for the /bp:draft command to call after Step 8 (cavekit-reviewer).
+# Entry point for the /ck:sketch command to call after Step 8 (cavekit-reviewer).
 # Runs the design challenge and returns results for insertion before Step 9 (user gate).
 #
 # Arguments:
@@ -513,7 +513,7 @@ bp_draft_challenge_hook() {
   local start_time
   start_time="$(date +%s)"
 
-  echo "[bp:draft] Running Codex design challenge..."
+  echo "[ck:sketch] Running Codex design challenge..."
 
   local result
   result="$(bp_design_challenge_cycle --kits-dir "$kits_dir" 2>&1)"
@@ -529,17 +529,17 @@ bp_draft_challenge_hook() {
     0)
       # Collect any advisory findings for user gate
       BP_CHALLENGE_ADVISORY_OUTPUT="$(bp_format_advisory_for_user 2>/dev/null || true)"
-      echo "[bp:draft] Design challenge passed (${BP_CHALLENGE_DURATION}s)."
+      echo "[ck:sketch] Design challenge passed (${BP_CHALLENGE_DURATION}s)."
       return 0
       ;;
     2)
-      echo "[bp:draft] Design challenge skipped — Codex unavailable (${BP_CHALLENGE_DURATION}s)."
+      echo "[ck:sketch] Design challenge skipped — Codex unavailable (${BP_CHALLENGE_DURATION}s)."
       return 2
       ;;
     *)
       # Critical findings remain — let caller decide
       BP_CHALLENGE_ADVISORY_OUTPUT="$(bp_format_advisory_for_user 2>/dev/null || true)"
-      echo "[bp:draft] Design challenge has unresolved critical findings (${BP_CHALLENGE_DURATION}s)."
+      echo "[ck:sketch] Design challenge has unresolved critical findings (${BP_CHALLENGE_DURATION}s)."
       return 1
       ;;
   esac

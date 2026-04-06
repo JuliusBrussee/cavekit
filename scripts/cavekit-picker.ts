@@ -185,7 +185,7 @@ async function main() {
 
   if (frontiers.length === 0) {
     console.error("No frontiers found in context/plans/ or context/sites/");
-    console.error("Run /bp:architect first to generate one.");
+    console.error("Run /ck:map first to generate one.");
     process.exit(1);
   }
 

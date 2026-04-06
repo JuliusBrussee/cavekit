@@ -92,4 +92,4 @@ Requires from `build-site-codex.md`:
 | draft-challenge | R5 (Challenge Prompt Design) | T-301 |
 
 ### Next Step
-Run `/bp:build` after `build-site-codex` Tier 1 is complete.
+Run `/ck:make` after `build-site-codex` Tier 1 is complete.

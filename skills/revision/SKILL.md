@@ -327,16 +327,16 @@ Every revision cycle tightens the kits, so the iteration loop settles into a sta
 
 ## 7. Integration with Other Cavekit Skills
 
-- **Convergence monitoring:** Use `bp:convergence-monitoring` to detect when manual fixes are decreasing (good) or increasing (revision debt).
-- **Prompt pipeline:** Revision may trigger changes to prompts (Step 6), which affects the `bp:prompt-pipeline` design.
+- **Convergence monitoring:** Use `ck:convergence-monitoring` to detect when manual fixes are decreasing (good) or increasing (revision debt).
+- **Prompt pipeline:** Revision may trigger changes to prompts (Step 6), which affects the `ck:prompt-pipeline` design.
 - **Validation-first design:** Stronger validation gates catch issues earlier, reducing the need for revision.
-- **Gap analysis:** Systematic gap analysis (`/bp:gap-analysis`) identifies revision targets proactively, rather than waiting for bugs.
+- **Gap analysis:** Systematic gap analysis (`/ck:scan`) identifies revision targets proactively, rather than waiting for bugs.
 
 ---
 
 ## Cross-References
 
 - **Convergence patterns:** See `references/convergence-patterns.md` for how revision drives convergence.
-- **Prompt pipeline:** See `bp:prompt-pipeline` skill for how prompt 006 (rewrite pattern) implements automated revision.
-- **Impl tracking:** See `bp:impl-tracking` skill for the revision log format in implementation tracking documents.
-- **Validation gates:** See `bp:validation-first` skill for validation layers that catch issues before they require revision.
+- **Prompt pipeline:** See `ck:prompt-pipeline` skill for how prompt 006 (rewrite pattern) implements automated revision.
+- **Impl tracking:** See `ck:impl-tracking` skill for the revision log format in implementation tracking documents.
+- **Validation gates:** See `ck:validation-first` skill for validation layers that catch issues before they require revision.

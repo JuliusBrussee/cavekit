@@ -156,32 +156,32 @@ bp_speculative_dispatch() {
   local tier="$1" base_ref="$2"
 
   if ! bp_speculative_enabled; then
-    echo "[bp:speculative] Speculative review disabled. Skipping."
+    echo "[ck:speculative] Speculative review disabled. Skipping."
     return 0
   fi
 
   if [[ "$codex_available" != "true" ]]; then
-    echo "[bp:speculative] Codex unavailable. Skipping speculative dispatch."
+    echo "[ck:speculative] Codex unavailable. Skipping speculative dispatch."
     return 0
   fi
 
   # Tier 0 has no previous tier — skip
   if [[ "$tier" == "0" ]]; then
-    echo "[bp:speculative] Tier 0 — no previous tier to review speculatively."
+    echo "[ck:speculative] Tier 0 — no previous tier to review speculatively."
     return 0
   fi
 
   local output_file="${_BP_SPECULATIVE_STATE_DIR}/review-tier-${tier}.out"
   mkdir -p "$_BP_SPECULATIVE_STATE_DIR"
 
-  echo "[bp:speculative] Dispatching background review of tier $((tier - 1)) (diff from $base_ref)..."
+  echo "[ck:speculative] Dispatching background review of tier $((tier - 1)) (diff from $base_ref)..."
 
   # Run codex-review.sh in background, capture output
   bash "$SCRIPT_DIR/codex-review.sh" --base "$base_ref" > "$output_file" 2>&1 &
   local pid=$!
 
   bp_speculative_record_job "$tier" "$pid" "$output_file" "$base_ref"
-  echo "[bp:speculative] Background job PID=$pid dispatched for tier $((tier - 1)) review."
+  echo "[ck:speculative] Background job PID=$pid dispatched for tier $((tier - 1)) review."
 }
 
 # ── T-204: Pipeline Overlap Status Reporting ──────────────────────────
@@ -191,11 +191,11 @@ bp_speculative_status() {
   state_file="$(_bp_speculative_state_file)"
 
   if [[ ! -f "$state_file" ]] || [[ ! -s "$state_file" ]]; then
-    echo "[bp:speculative] No speculative reviews tracked."
+    echo "[ck:speculative] No speculative reviews tracked."
     return 0
   fi
 
-  echo "[bp:speculative] Pipeline status:"
+  echo "[ck:speculative] Pipeline status:"
   while IFS='|' read -r tier pid outf bref status start; do
     [[ -z "$tier" ]] && continue
     local now elapsed state_desc
@@ -241,7 +241,7 @@ bp_speculative_retrieve() {
 
   local job_info
   job_info="$(bp_speculative_get_job "$tier" 2>/dev/null)" || {
-    echo "[bp:speculative] No speculative job for tier $tier. Falling back to synchronous."
+    echo "[ck:speculative] No speculative job for tier $tier. Falling back to synchronous."
     return 1
   }
 
@@ -251,33 +251,33 @@ bp_speculative_retrieve() {
   # Check if already complete
   if [[ "$j_status" == "complete" || "$j_status" == "consumed" ]]; then
     if [[ "$j_status" == "consumed" ]]; then
-      echo "[bp:speculative] Tier $((tier - 1)) review already consumed."
+      echo "[ck:speculative] Tier $((tier - 1)) review already consumed."
       return 0
     fi
-    echo "[bp:speculative] Tier $((tier - 1)) review already complete. Consuming results."
+    echo "[ck:speculative] Tier $((tier - 1)) review already complete. Consuming results."
     _bp_speculative_consume_results "$tier" "$j_outf"
     return $?
   fi
 
   if [[ "$j_status" == "failed" ]]; then
-    echo "[bp:speculative] Tier $((tier - 1)) review failed. Falling back to synchronous."
+    echo "[ck:speculative] Tier $((tier - 1)) review failed. Falling back to synchronous."
     return 1
   fi
 
   # Still running — wait with timeout
-  echo "[bp:speculative] Tier $((tier - 1)) review still running. Waiting up to ${timeout}s..."
+  echo "[ck:speculative] Tier $((tier - 1)) review still running. Waiting up to ${timeout}s..."
   local waited=0
   while (( waited < timeout )); do
     if ! kill -0 "$j_pid" 2>/dev/null; then
       # Process exited
       if [[ -f "$j_outf" && -s "$j_outf" ]]; then
         bp_speculative_update_job "$tier" "complete"
-        echo "[bp:speculative] Review completed after ${waited}s wait."
+        echo "[ck:speculative] Review completed after ${waited}s wait."
         _bp_speculative_consume_results "$tier" "$j_outf"
         return $?
       else
         bp_speculative_update_job "$tier" "failed"
-        echo "[bp:speculative] Review process exited but no output. Falling back."
+        echo "[ck:speculative] Review process exited but no output. Falling back."
         return 1
       fi
     fi
@@ -286,7 +286,7 @@ bp_speculative_retrieve() {
   done
 
   # Timed out
-  echo "[bp:speculative] Timed out after ${timeout}s. Falling back to synchronous review."
+  echo "[ck:speculative] Timed out after ${timeout}s. Falling back to synchronous review."
   bp_speculative_update_job "$tier" "timeout"
   return 2
 }
@@ -303,13 +303,13 @@ _bp_speculative_consume_results() {
 
   # Check for clean review
   if echo "$content" | grep -q 'no issues\|Clean review\|NO_FINDINGS'; then
-    echo "[bp:speculative] Tier $((tier - 1)) speculative review: clean."
+    echo "[ck:speculative] Tier $((tier - 1)) speculative review: clean."
     bp_speculative_update_job "$tier" "consumed"
     return 0
   fi
 
   # Findings exist — they've already been appended to the findings file by codex-review.sh
-  echo "[bp:speculative] Tier $((tier - 1)) speculative review found issues."
+  echo "[ck:speculative] Tier $((tier - 1)) speculative review found issues."
   echo "$content"
   bp_speculative_update_job "$tier" "consumed"
   return 0
@@ -334,7 +334,7 @@ bp_speculative_reconcile() {
   local job_info
   job_info="$(bp_speculative_get_job "$tier" 2>/dev/null)" || return 0
 
-  echo "[bp:speculative] Reconciling speculative findings for tier $((tier - 1))."
+  echo "[ck:speculative] Reconciling speculative findings for tier $((tier - 1))."
   # The findings are already in the findings file from codex-review.sh.
   # The tier gate will process them normally via bp_tier_gate.
 }
@@ -351,11 +351,11 @@ bp_speculative_queue_finding() {
 
 bp_speculative_drain_queue() {
   if [[ -z "$_BP_SPECULATIVE_QUEUED_FINDINGS" ]]; then
-    echo "[bp:speculative] No queued findings."
+    echo "[ck:speculative] No queued findings."
     return 0
   fi
 
-  echo "[bp:speculative] Processing $(echo "$_BP_SPECULATIVE_QUEUED_FINDINGS" | grep -c '^[^$]') queued finding(s)..."
+  echo "[ck:speculative] Processing $(echo "$_BP_SPECULATIVE_QUEUED_FINDINGS" | grep -c '^[^$]') queued finding(s)..."
 
   while IFS= read -r finding; do
     [[ -z "$finding" ]] && continue

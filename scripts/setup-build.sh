@@ -178,7 +178,7 @@ fi
 
 if [[ ${#CANDIDATES[@]} -eq 0 ]]; then
   echo "❌ No build site or plan found in context/plans/ or context/sites/" >&2
-  echo "   Run /bp:architect first to generate one." >&2
+  echo "   Run /ck:map first to generate one." >&2
   exit 1
 fi
 

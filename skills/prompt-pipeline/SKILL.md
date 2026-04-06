@@ -446,6 +446,6 @@ The iteration loop handles: iteration counting, timeouts, nudging idle agents, d
 
 - **Prompt engineering details:** See `references/prompt-engineering.md` for the complete reference on runtime inputs, spawn templates, task templates, time guards, and file ownership.
 - **Agent team patterns:** See `references/agent-team-patterns.md` for coordination patterns, batching, agent isolation, and merge protocol.
-- **Convergence monitoring:** See `bp:convergence-monitoring` skill for detecting when the iteration loop should stop.
-- **Revision:** See `bp:revision` skill for how prompt 006 traces bugs back to specs.
-- **Context architecture:** See `bp:context-architecture` skill for the directory structure that prompts read from and write to.
+- **Convergence monitoring:** See `ck:convergence-monitoring` skill for detecting when the iteration loop should stop.
+- **Revision:** See `ck:revision` skill for how prompt 006 traces bugs back to specs.
+- **Context architecture:** See `ck:context-architecture` skill for the directory structure that prompts read from and write to.

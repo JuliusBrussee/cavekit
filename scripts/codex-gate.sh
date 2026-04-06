@@ -165,13 +165,13 @@ bp_review_fix_cycle() {
 
   while (( cycle < max_cycles )); do
     cycle=$((cycle + 1))
-    echo "[bp:tier-gate] Review-fix cycle ${cycle}/${max_cycles}"
+    echo "[ck:tier-gate] Review-fix cycle ${cycle}/${max_cycles}"
 
     # Run the review
     if [[ -f "$SCRIPT_DIR/codex-review.sh" ]]; then
       bash "$SCRIPT_DIR/codex-review.sh" --base "$base_ref"
     else
-      echo "[bp:tier-gate] codex-review.sh not found, skipping review"
+      echo "[ck:tier-gate] codex-review.sh not found, skipping review"
       return 0
     fi
 
@@ -186,16 +186,16 @@ bp_review_fix_cycle() {
     echo "$gate_output"
 
     if [[ "$gate_result" == "proceed" ]]; then
-      echo "[bp:tier-gate] Gate: PROCEED (no blocking findings)"
+      echo "[ck:tier-gate] Gate: PROCEED (no blocking findings)"
       return 0
     fi
 
     # If blocked and not the last cycle, output fix tasks for the caller
     if (( cycle < max_cycles )); then
-      echo "[bp:tier-gate] Gate: BLOCKED — ${blocking_count} finding(s) need fixes"
-      echo "[bp:tier-gate] Fix tasks for this cycle:"
+      echo "[ck:tier-gate] Gate: BLOCKED — ${blocking_count} finding(s) need fixes"
+      echo "[ck:tier-gate] Fix tasks for this cycle:"
       bp_generate_fix_tasks
-      echo "[bp:tier-gate] AWAITING_FIXES"
+      echo "[ck:tier-gate] AWAITING_FIXES"
       # The caller implements fixes, marks findings FIXED, then calls us again
       # by continuing the loop. In practice, the build loop reads AWAITING_FIXES,
       # implements the fixes, and then the loop continues with the re-review.
@@ -206,7 +206,7 @@ bp_review_fix_cycle() {
   # Exhausted max cycles — advance with warning
   local remaining
   remaining="$(bp_generate_fix_tasks | wc -l | tr -d ' ')"
-  echo "[bp:tier-gate] WARNING: Advancing after ${max_cycles} review-fix cycles with ${remaining} unresolved blocking findings"
+  echo "[ck:tier-gate] WARNING: Advancing after ${max_cycles} review-fix cycles with ${remaining} unresolved blocking findings"
   return 1
 }
 

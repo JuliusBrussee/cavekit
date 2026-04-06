@@ -73,7 +73,7 @@ Build sites previously lived in `context/sites/`. All Cavekit commands check bot
 2. If not found, fall back to `context/sites/`
 3. If found in `sites/`, use it — no auto-migration, no breakage
 
-`/bp:init` offers optional migration. Declining is permanent — the system works with either layout.
+`/ck:init` offers optional migration. Declining is permanent — the system works with either layout.
 
 ---
 
@@ -126,7 +126,7 @@ The third file bridges to the context DAG. The agent knows which cavekit to load
 - **Minimal** — 3-10 lines for source-tree files. Never duplicate cavekit content.
 - **Connective** — each one names the cavekit requirements and plan tasks it relates to.
 - **Contextual** — includes module-specific conventions (error handling patterns, test fixture locations).
-- **Honest** — `/bp:build` only writes mappings it is certain about (tasks it completed, files it created).
+- **Honest** — `/ck:make` only writes mappings it is certain about (tasks it completed, files it created).
 
 ---
 
@@ -212,7 +212,7 @@ If cavekit changed --> propagate to plans/ --> flag affected tasks
 
 ### Forward Propagation
 
-When a cavekit changes via `/bp:revise`:
+When a cavekit changes via `/ck:revise`:
 1. Scan all `src/*/CLAUDE.md` files for references to the changed requirement
 2. Flag those modules as potentially affected
 3. New requirements with no source-tree CLAUDE.md references are unimplemented
@@ -221,7 +221,7 @@ When a cavekit changes via `/bp:revise`:
 
 ## Bootstrapping
 
-Run `/bp:init` to create the full hierarchy. It:
+Run `/ck:init` to create the full hierarchy. It:
 1. Scans existing project structure
 2. Creates context directories (refs/, kits/, plans/, impl/)
 3. Creates CLAUDE.md files using standard templates
@@ -234,7 +234,7 @@ Properties: idempotent, non-destructive, no questions asked.
 
 ## Build-Time Updates
 
-After `/bp:build` completes, source-tree CLAUDE.md files are generated/updated:
+After `/ck:make` completes, source-tree CLAUDE.md files are generated/updated:
 - New source directories get a CLAUDE.md with cavekit/plan references
 - Existing CLAUDE.md files get new references appended (never removed)
 - `impl-overview.md` and `plan-overview.md` are updated with current status
@@ -261,12 +261,12 @@ Each framework repo includes the shared context as a submodule. Updates propagat
 
 | Skill | Integration |
 |-------|------------|
-| `bp:cavekit-writing` | Kits go in `context/kits/` following naming conventions |
-| `bp:design-system` | DESIGN.md lives at project root; `context/designs/` has CLAUDE.md and changelog |
-| `bp:impl-tracking` | Tracking lives in `context/impl/`, compacted when exceeding ~500 lines |
-| `bp:validation-first` | Validation results recorded in impl tracking within the hierarchy |
-| `bp:revision` | `/bp:revise` traverses CLAUDE.md edges in reverse to trace bugs to specs |
-| `bp:methodology` | Context structure established during Draft phase, maintained throughout DABI |
+| `ck:cavekit-writing` | Kits go in `context/kits/` following naming conventions |
+| `ck:design-system` | DESIGN.md lives at project root; `context/designs/` has CLAUDE.md and changelog |
+| `ck:impl-tracking` | Tracking lives in `context/impl/`, compacted when exceeding ~500 lines |
+| `ck:validation-first` | Validation results recorded in impl tracking within the hierarchy |
+| `ck:revision` | `/ck:revise` traverses CLAUDE.md edges in reverse to trace bugs to specs |
+| `ck:methodology` | Context structure established during Draft phase, maintained throughout DABI |
 
 ---
 
@@ -275,7 +275,7 @@ Each framework repo includes the shared context as a submodule. Updates propagat
 | Anti-Pattern | Why It's Wrong | Fix |
 |-------------|---------------|-----|
 | Flat file dump | No progressive disclosure, agents load everything | Use standard directory structure with indexes |
-| Missing CLAUDE.md files | No convention guidance, no DAG edges | Run `/bp:init` or add manually |
+| Missing CLAUDE.md files | No convention guidance, no DAG edges | Run `/ck:init` or add manually |
 | Monolithic documents | Defeats progressive disclosure | Decompose into domains with overview indexes |
 | Stale archives in active dirs | Wastes context window | Move to `impl/archive/` |
 | Duplicating cavekit content in CLAUDE.md | Content drifts, double maintenance | CLAUDE.md files only contain references |

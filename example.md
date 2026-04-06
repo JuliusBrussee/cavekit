@@ -3,7 +3,7 @@
 ## Greenfield: Task management API
 
 ```
-user: /bp:draft
+user: /ck:sketch
 
 claude: What are you building?
 
@@ -19,9 +19,9 @@ claude: Decomposing into domains...
       - cavekit-notifications.md (3 requirements, 8 acceptance criteria)
 
       Dependency order: users → projects → tasks → notifications
-      Next: /bp:architect
+      Next: /ck:map
 
-user: /bp:architect
+user: /ck:map
 
 claude: Reading 4 kits, 22 requirements...
 
@@ -32,9 +32,9 @@ claude: Reading 4 kits, 22 requirements...
       - Tier 3: Task CRUD, assignments (10 tasks)
       - Tier 4: Notifications (8 tasks)
 
-      Next: /bp:build
+      Next: /ck:make
 
-user: /bp:build
+user: /ck:make
 
 claude: Loop activated! 34 tasks, 20 max iterations.
 
@@ -57,7 +57,7 @@ claude: Loop activated! 34 tasks, 20 max iterations.
 ## Brownfield: Adding collaboration to existing Next.js app
 
 ```
-user: /bp:draft --from-code
+user: /ck:sketch --from-code
 
 claude: Exploring codebase... Next.js 14, Prisma, NextAuth.
 
@@ -72,7 +72,7 @@ claude: Exploring codebase... Next.js 14, Prisma, NextAuth.
       4 requirements are gaps (not yet implemented).
 
 user: I only want the collaboration features.
-      /bp:architect --filter collaboration
+      /ck:map --filter collaboration
 
 claude: Reading cavekit-collaboration.md (3 requirements)...
 
@@ -81,7 +81,7 @@ claude: Reading cavekit-collaboration.md (3 requirements)...
       - Tier 1: Cursor presence, CRDT integration
       - Tier 2: Conflict resolution, live sync
 
-user: /bp:build --filter collaboration
+user: /ck:make --filter collaboration
 
 claude: Loop activated! 8 tasks.
 
@@ -93,8 +93,8 @@ claude: Loop activated! 8 tasks.
       All done. <promise>CAVEKIT COMPLETE</promise>
 
 user: Now notifications with peer review.
-      /bp:architect --filter notifications
-      /bp:build --filter notifications --peer-review
+      /ck:map --filter notifications
+      /ck:make --filter notifications --peer-review
 
 claude: Archived previous cycle → context/impl/archive/20260314-201500/
       Configured Codex (gpt-5.4) as peer reviewer.
@@ -116,7 +116,7 @@ claude: Archived previous cycle → context/impl/archive/20260314-201500/
 ## The flow
 
 ```
-/bp:draft      →  kits
-/bp:architect  →  build site
-/bp:build      →  code
+/ck:sketch      →  kits
+/ck:map  →  build site
+/ck:make      →  code
 ```

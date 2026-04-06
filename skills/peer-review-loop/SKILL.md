@@ -76,16 +76,16 @@ delegation. Otherwise it falls back to MCP configuration.
 
 ```bash
 # Basic: implement a cavekit with peer review
-/bp:peer-review-loop context/kits/cavekit-auth.md
+/ck:peer-review-loop context/kits/cavekit-auth.md
 
 # With options
-/bp:peer-review-loop context/kits/cavekit-api.md --max-iterations 20 --codex-model gpt-5.4-mini
+/ck:peer-review-loop context/kits/cavekit-api.md --max-iterations 20 --codex-model gpt-5.4-mini
 
 # Review-only mode (review existing code, don't build new)
-/bp:peer-review-loop context/kits/cavekit-api.md --review-only
+/ck:peer-review-loop context/kits/cavekit-api.md --review-only
 
 # Review every iteration instead of every 2nd
-/bp:peer-review-loop context/kits/cavekit-auth.md --review-interval 1
+/ck:peer-review-loop context/kits/cavekit-auth.md --review-interval 1
 ```
 
 ---
@@ -146,8 +146,8 @@ code diff, Codex returns findings.
 Use `--codex-model` to specify which OpenAI model Codex should use:
 
 ```bash
-/bp:peer-review-loop cavekit.md --codex-model gpt-5.4-mini    # faster, cheaper
-/bp:peer-review-loop cavekit.md --codex-model gpt-5.4          # default, most capable
+/ck:peer-review-loop cavekit.md --codex-model gpt-5.4-mini    # faster, cheaper
+/ck:peer-review-loop cavekit.md --codex-model gpt-5.4          # default, most capable
 ```
 
 ---
@@ -240,7 +240,7 @@ The peer review loop has converged when:
 If the loop hits max iterations without converging:
 - Check `context/peer-review-findings.md` for persistent issues
 - Consider whether the cavekit needs clarification
-- Run `/bp:revise` to trace issues back to kits
+- Run `/ck:revise` to trace issues back to kits
 
 ---
 

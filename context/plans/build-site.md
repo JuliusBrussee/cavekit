@@ -50,7 +50,7 @@ last_edited: "2026-04-01T12:00:00Z"
 
 **T-003 details:** "THE PROBLEM" section. Headline: "AI coding agents are powerful. They fail in predictable ways." 2×2 card grid (1-col mobile). Cards: glassmorphism + red-tinted border, neon-red monospace title with glow, description, severity bar (fills 70-90% on scroll, `ease-out` 800ms). Stagger: 80ms between cards, `translateY(12px)` entrance.
 
-**T-004 details:** "HOW IT WORKS" section. 4 horizontal cards (vertical mobile): Draft, Architect, Build, Inspect. Large phase letter (48px, blue glow), name, `/bp:*` command pill, one-liner. Connected by animated glow lines with traveling pulse. Paragraph below about kits as source of truth. Stagger: 100ms between cards.
+**T-004 details:** "HOW IT WORKS" section. 4 horizontal cards (vertical mobile): Draft, Architect, Build, Inspect. Large phase letter (48px, blue glow), name, `/ck:*` command pill, one-liner. Connected by animated glow lines with traveling pulse. Paragraph below about kits as source of truth. Stagger: 100ms between cards.
 
 **T-005 details:** "ADVERSARIAL REVIEW" section. Headline + subheadline. 3 stacked full-width cards: Design Challenge (PRE-BUILD badge, Claude→Reviewer→Codex→User flow diagram), Tier Gate (BUILD-TIME badge, P0-P3 severity table with colored dots), Command Safety (RUNTIME badge, command→fast-path→classify→verdict flow). Glassmorphism cards with colored badges. Note about additive features. Stagger: 100ms. Mini diagrams draw after card visible (+300ms).
 
@@ -87,9 +87,9 @@ last_edited: "2026-04-01T12:00:00Z"
 | T-015 | Docs content: Codex Integration (5 subsections) | cavekit-docs-page.md | R10 | T-010, T-011 | M |
 | T-016 | Docs content: Skills Reference + Configuration | cavekit-docs-page.md | R11, R12 | T-010, T-011 | M |
 
-**T-012 details:** Overview section: what Cavekit is, who it's for, specification layer concept, brief DABI summary with links to Commands/Methodology sections. Quick Start: Greenfield subsection (annotated `/bp:draft` → `/bp:architect` → `/bp:build` conversation) and Brownfield subsection (`--from-code` → `--filter` conversation). Content from README "The Idea", "How It Works" intro, and "Quick Start".
+**T-012 details:** Overview section: what Cavekit is, who it's for, specification layer concept, brief DABI summary with links to Commands/Methodology sections. Quick Start: Greenfield subsection (annotated `/ck:sketch` → `/ck:map` → `/ck:make` conversation) and Brownfield subsection (`--from-code` → `--filter` conversation). Content from README "The Idea", "How It Works" intro, and "Quick Start".
 
-**T-013 details:** Commands section with 10 command entries. Each: monospace heading, phase badge (Draft/Architect/Build/Inspect/Utility), description, terminal usage example, flags/options table where applicable, related command links. Commands: `/bp:draft` (flags: `--from-code`), `/bp:architect` (flags: `--filter`), `/bp:build` (flags: `--peer-review`), `/bp:inspect`, `/bp:research`, `/bp:progress`, `/bp:gap-analysis`, `/bp:revise`, `/bp:codex-review`, `/bp:help`. Content from README "Commands" + CLI help.
+**T-013 details:** Commands section with 10 command entries. Each: monospace heading, phase badge (Draft/Architect/Build/Inspect/Utility), description, terminal usage example, flags/options table where applicable, related command links. Commands: `/ck:sketch` (flags: `--from-code`), `/ck:map` (flags: `--filter`), `/ck:make` (flags: `--peer-review`), `/ck:check`, `/ck:research`, `/ck:progress`, `/ck:scan`, `/ck:revise`, `/ck:judge`, `/ck:help`. Content from README "Commands" + CLI help.
 
 **T-014 details:** Methodology section. DABI Lifecycle: detailed phase walkthrough with what each produces. Kits as Source of Truth: why specs drive development. Scientific Method Applied: hypothesis→test→observe→refine mapped to kits→gates→loops→revision. Content from README "Methodology" and "Why Cavekit".
 

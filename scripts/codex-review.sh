@@ -45,7 +45,7 @@ bp_codex_review() {
     case "$1" in
       --base) base_ref="$2"; shift 2 ;;
       --help|-h) _codex_review_usage; return 0 ;;
-      *) echo "[bp:review] Unknown argument: $1" >&2; return 1 ;;
+      *) echo "[ck:review] Unknown argument: $1" >&2; return 1 ;;
     esac
   done
 
@@ -53,13 +53,13 @@ bp_codex_review() {
   local review_mode
   review_mode="$(bp_config_get codex_review auto)"
   if [[ "$review_mode" == "off" ]]; then
-    echo "[bp:review] Codex review is disabled (codex_review=off). Skipping."
+    echo "[ck:review] Codex review is disabled (codex_review=off). Skipping."
     return 0
   fi
 
   # Check availability — fall back when Codex unavailable
   if [[ "$codex_available" != "true" ]]; then
-    echo "[bp:review] Codex is not available. Falling back to inspector-only review."
+    echo "[ck:review] Codex is not available. Falling back to inspector-only review."
     return 0
   fi
 
@@ -68,19 +68,19 @@ bp_codex_review() {
     base_ref="$(_detect_base_ref)"
   fi
 
-  echo "[bp:review] Computing diff ${base_ref}...HEAD"
+  echo "[ck:review] Computing diff ${base_ref}...HEAD"
 
   local diff
   diff="$(git diff "${base_ref}...HEAD" 2>/dev/null || git diff "${base_ref}" HEAD 2>/dev/null || true)"
 
   if [[ -z "$diff" ]]; then
-    echo "[bp:review] No diff found. Nothing to review."
+    echo "[ck:review] No diff found. Nothing to review."
     return 0
   fi
 
   local diff_lines
   diff_lines="$(echo "$diff" | wc -l | tr -d ' ')"
-  echo "[bp:review] Diff is ${diff_lines} lines. Sending to Codex..."
+  echo "[ck:review] Diff is ${diff_lines} lines. Sending to Codex..."
 
   # Build Codex invocation
   local model
@@ -89,41 +89,41 @@ bp_codex_review() {
   local codex_cmd=(codex --approval-mode full-auto --model "$model" --quiet -p "$REVIEW_PROMPT")
 
   if [[ "${BP_CODEX_DRY_RUN:-}" == "1" ]]; then
-    echo "[bp:review] DRY RUN — would execute: ${codex_cmd[*]} <<< <diff>"
+    echo "[ck:review] DRY RUN — would execute: ${codex_cmd[*]} <<< <diff>"
     return 0
   fi
 
   local raw_output
   raw_output="$(echo "$diff" | "${codex_cmd[@]}" 2>&1)" || {
-    echo "[bp:review] Codex invocation failed. Falling back to inspector-only review."
-    echo "[bp:review] Error: ${raw_output:0:500}"
+    echo "[ck:review] Codex invocation failed. Falling back to inspector-only review."
+    echo "[ck:review] Error: ${raw_output:0:500}"
     return 0
   }
 
   # Parse output
   if echo "$raw_output" | grep -qi 'NO_FINDINGS'; then
-    echo "[bp:review] Codex found no issues. Clean review."
+    echo "[ck:review] Codex found no issues. Clean review."
     return 0
   fi
 
-  echo "[bp:review] Parsing Codex findings..."
+  echo "[ck:review] Parsing Codex findings..."
 
   local findings
   findings="$(_parse_codex_findings "$raw_output")"
 
   if [[ -z "$findings" ]]; then
-    echo "[bp:review] Could not parse findings from Codex output."
-    echo "[bp:review] Raw (first 1000 chars): ${raw_output:0:1000}"
+    echo "[ck:review] Could not parse findings from Codex output."
+    echo "[ck:review] Raw (first 1000 chars): ${raw_output:0:1000}"
     return 0
   fi
 
   _append_findings_to_file "$findings"
 
   echo ""
-  echo "[bp:review] === Codex Adversarial Review Findings ==="
+  echo "[ck:review] === Codex Adversarial Review Findings ==="
   echo "$findings"
-  echo "[bp:review] === End of Findings ==="
-  echo "[bp:review] Findings appended to $FINDINGS_FILE"
+  echo "[ck:review] === End of Findings ==="
+  echo "[ck:review] Findings appended to $FINDINGS_FILE"
 
   return 0
 }

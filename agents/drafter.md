@@ -1,6 +1,6 @@
 ---
 name: drafter
-description: Generates implementation-agnostic kits from reference materials or existing code. Use when running /bp:draft-from-code or /bp:draft-from-refs commands.
+description: Generates implementation-agnostic kits from reference materials or existing code. Use when running /ck:sketch-from-code or /ck:sketch-from-refs commands.
 model: opus
 tools: [Read, Write, Edit, Grep, Glob, Bash]
 ---

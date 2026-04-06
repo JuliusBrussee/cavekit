@@ -439,7 +439,7 @@ Task-builder agents follow this protocol for UI work:
 
 ## Revision Patterns
 
-When visual fixes are made manually (outside the DABI loop), `/bp:revise` traces them back to DESIGN.md:
+When visual fixes are made manually (outside the DABI loop), `/ck:revise` traces them back to DESIGN.md:
 
 ### Visual Fix Classification
 

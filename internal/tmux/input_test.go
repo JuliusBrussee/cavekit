@@ -36,13 +36,13 @@ func TestManager_SendKeys(t *testing.T) {
 	})
 
 	mgr := NewManager(mock)
-	err := mgr.SendKeys(context.Background(), "test", "/bp:build", "Enter")
+	err := mgr.SendKeys(context.Background(), "test", "/ck:make", "Enter")
 	if err != nil {
 		t.Fatalf("SendKeys: %v", err)
 	}
 
 	args := mock.Calls[0].Args
-	// Should include: send-keys -t bp_test /bp:build Enter
+	// Should include: send-keys -t bp_test /ck:make Enter
 	if args[0] != "send-keys" {
 		t.Errorf("first arg should be send-keys, got %s", args[0])
 	}
@@ -73,7 +73,7 @@ func TestManager_SendCommand(t *testing.T) {
 	})
 
 	mgr := NewManager(mock)
-	err := mgr.SendCommand(context.Background(), "test", "/bp:build --filter auth")
+	err := mgr.SendCommand(context.Background(), "test", "/ck:make --filter auth")
 	if err != nil {
 		t.Fatalf("SendCommand: %v", err)
 	}
@@ -81,7 +81,7 @@ func TestManager_SendCommand(t *testing.T) {
 	args := mock.Calls[0].Args
 	found := false
 	for _, a := range args {
-		if a == "/bp:build --filter auth" {
+		if a == "/ck:make --filter auth" {
 			found = true
 		}
 	}

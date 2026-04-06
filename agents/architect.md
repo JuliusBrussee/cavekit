@@ -1,6 +1,6 @@
 ---
 name: architect
-description: Generates framework-specific implementation plans from kits. Use when running /bp:architect-from-kits command.
+description: Generates framework-specific implementation plans from kits. Use when running /ck:map-from-kits command.
 model: opus
 tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch]
 ---

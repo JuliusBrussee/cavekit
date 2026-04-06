@@ -82,7 +82,7 @@ The bubbletea-based TUI that replaces the current tmux split-pane layout. Render
 - [ ] Press `n` to start: shows name input field at the bottom of the instance list
 - [ ] Press `N` (Shift+N) to start with prompt: shows name input, then prompt+branch picker overlay
 - [ ] Name input validates: non-empty, max 32 chars
-- [ ] On Enter: creates instance, starts worktree+tmux, sends `/bp:build --filter {name}`
+- [ ] On Enter: creates instance, starts worktree+tmux, sends `/ck:make --filter {name}`
 - [ ] Esc cancels and removes the pending instance
 **Dependencies:** R2, R7, cavekit-session R2
 

@@ -105,4 +105,4 @@ Requires from `build-site-codex.md`:
 | speculative-review | R5 (Configuration) | T-201 |
 
 ### Next Step
-Run `/bp:build` after `build-site-codex` Tier 1 is complete.
+Run `/ck:make` after `build-site-codex` Tier 1 is complete.

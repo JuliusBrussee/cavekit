@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # cavekit-launch-session — Creates a tmux session with one pane per build site.
-# Each pane runs Claude in the project directory with /bp:build.
+# Each pane runs Claude in the project directory with /ck:make.
 #
 # Usage: cavekit-launch-session.sh [--expanded] <frontier-path> [<frontier-path> ...]
 #
@@ -181,16 +181,16 @@ else
   tmux select-pane -t "$SESSION_NAME:0.0"
 fi
 
-# ─── Staggered /bp:build launch ──────────────────────────────────────
+# ─── Staggered /ck:make launch ──────────────────────────────────────
 
-# Background process that sends /bp:build to NEW panes (resumed ones already have context)
+# Background process that sends /ck:make to NEW panes (resumed ones already have context)
 (
   sleep 3  # Wait for Claude instances to start
 
   for i in "${!NAMES[@]}"; do
     name="${NAMES[$i]}"
 
-    # Resumed sessions already have their loop — skip sending /bp:build
+    # Resumed sessions already have their loop — skip sending /ck:make
     if [[ "${RESUMING[$i]}" == "true" ]]; then
       continue
     fi
@@ -201,7 +201,7 @@ fi
       target="$SESSION_NAME:0.${i}"
     fi
 
-    tmux send-keys -t "$target" "/bp:build --filter ${name}" Enter
+    tmux send-keys -t "$target" "/ck:make --filter ${name}" Enter
 
     # Stagger between launches (skip delay after last one)
     sleep "$STAGGER_DELAY"

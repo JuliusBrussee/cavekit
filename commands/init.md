@@ -1,7 +1,9 @@
 ---
-name: bp-init
+name: ck-init
 description: "Bootstrap the context hierarchy — creates all directories, CLAUDE.md files, and index files"
 ---
+
+> **Note:** `/bp:init` is deprecated and will be removed in a future version. Use `/ck:init` instead.
 
 # Cavekit Init — Bootstrap Context Hierarchy
 
@@ -11,7 +13,7 @@ Creates the full context hierarchy for a Cavekit project. Run once at the start 
 
 - **Idempotent** — creates only what's missing. Safe to re-run.
 - **Non-destructive** — never overwrites existing files.
-- **No questions** — does not ask what you're building (that's `/bp:draft`).
+- **No questions** — does not ask what you're building (that's `/ck:sketch`).
 
 ## Step 1: Scan Existing Project Structure
 
@@ -127,7 +129,7 @@ The project's visual design system in DESIGN.md format (9-section Google Stitch)
 ## Conventions
 - DESIGN.md at project root is the canonical source
 - All UI implementation must reference DESIGN.md tokens and patterns
-- Updated via /bp:design or automatically during /bp:inspect and /bp:revise
+- Updated via /ck:design or automatically during /ck:check and /ck:revise
 - Agents read this before implementing any user-facing component
 - design-changelog.md tracks all design system changes
 ```
@@ -185,7 +187,7 @@ last_edited: "{CURRENT_DATE_UTC}"
 |----------|---------------|-----------------|
 
 ## Dependency Graph
-No domains defined yet. Run `/bp:draft` to create kits.
+No domains defined yet. Run `/ck:sketch` to create kits.
 ```
 
 ### `context/plans/plan-overview.md`
@@ -202,7 +204,7 @@ last_edited: "{CURRENT_DATE_UTC}"
 | Site | File | Tasks | Done | Status |
 |------|------|-------|------|--------|
 
-No build sites yet. Run `/bp:architect` to generate one.
+No build sites yet. Run `/ck:map` to generate one.
 ```
 
 ### `context/impl/impl-overview.md`
@@ -219,7 +221,7 @@ last_edited: "{CURRENT_DATE_UTC}"
 | Domain | Tasks Done | Tasks Total | Status |
 |--------|-----------|-------------|--------|
 
-No implementations tracked yet. Run `/bp:build` to start building.
+No implementations tracked yet. Run `/ck:make` to start building.
 ```
 
 ## Step 5: Detect Legacy Layout
@@ -262,7 +264,7 @@ Report what was created:
 - {migration status if applicable}
 
 ### Next Step
-Run `/bp:draft` to start writing kits.
+Run `/ck:sketch` to start writing kits.
 ```
 
 Then commit the scaffolding with message: "Initialize Cavekit context hierarchy"

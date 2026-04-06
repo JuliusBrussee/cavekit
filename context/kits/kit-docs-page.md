@@ -46,7 +46,7 @@ A single-file (`docs.html`) documentation page with sticky sidebar navigation, d
 - [ ] Navigation tree with collapsible sections (chevron indicators):
   - Overview
   - Quick Start (children: Greenfield, Brownfield)
-  - Commands (children: all 10 `/bp:*` commands)
+  - Commands (children: all 10 `/ck:*` commands)
   - Methodology (children: DABI Lifecycle, Kits as Source of Truth, Scientific Method Applied)
   - Codex Integration (children: Design Challenge, Tier Gate, Speculative Review, Command Safety Gate, Graceful Degradation)
   - Skills Reference (children: all 13 skills)
@@ -79,21 +79,21 @@ A single-file (`docs.html`) documentation page with sticky sidebar navigation, d
 **Acceptance Criteria:**
 - [ ] Two subsections: Greenfield and Brownfield
 - [ ] Each shows a full annotated conversation example (terminal-style code blocks)
-- [ ] Greenfield example: `/bp:draft` → `/bp:architect` → `/bp:build` with sample output
-- [ ] Brownfield example: `/bp:draft --from-code` → `/bp:architect --filter` → `/bp:build` with sample output
+- [ ] Greenfield example: `/ck:sketch` → `/ck:map` → `/ck:make` with sample output
+- [ ] Brownfield example: `/ck:sketch --from-code` → `/ck:map --filter` → `/ck:make` with sample output
 - [ ] Content derived from README "Quick Start" section
 
 ### R8: Commands Section
 **Description:** Reference for all Cavekit slash commands.
 **Acceptance Criteria:**
 - [ ] Each command gets its own subsection with:
-  - Command name in monospace heading (e.g., `/bp:draft`)
+  - Command name in monospace heading (e.g., `/ck:sketch`)
   - Phase badge (Draft, Architect, Build, Inspect, or "Utility")
   - One-line description
   - Usage example in terminal code block
   - Flags/options table if applicable (e.g., `--from-code`, `--filter`)
   - Links to related commands
-- [ ] Commands covered: `/bp:draft`, `/bp:architect`, `/bp:build`, `/bp:inspect`, `/bp:research`, `/bp:progress`, `/bp:gap-analysis`, `/bp:revise`, `/bp:codex-review`, `/bp:help`
+- [ ] Commands covered: `/ck:sketch`, `/ck:map`, `/ck:make`, `/ck:check`, `/ck:research`, `/ck:progress`, `/ck:scan`, `/ck:revise`, `/ck:judge`, `/ck:help`
 - [ ] Content derived from README "Commands" section + individual command descriptions
 
 ### R9: Methodology Section

@@ -31,7 +31,7 @@ Robust worktree lifecycle management for the build system. Covers keeping worktr
 ### R3: Failure Recovery
 **Description:** When a build fails or is interrupted, the system offers structured recovery options instead of leaving an orphaned worktree.
 **Acceptance Criteria:**
-- [ ] On build failure or interruption, the user is presented with three options: (a) resume — rebase on main and restart the agent, (b) abandon — remove the worktree and its branch, (c) merge — merge whatever was completed back to main via the normal `/bp:merge` flow
+- [ ] On build failure or interruption, the user is presented with three options: (a) resume — rebase on main and restart the agent, (b) abandon — remove the worktree and its branch, (c) merge — merge whatever was completed back to main via the normal `/ck:merge` flow
 - [ ] The TUI surfaces worktree state for failed/interrupted instances (branch name, last commit, diff stats) so the user can make an informed choice
 - [ ] Abandoned worktrees are fully cleaned up (worktree removed, branch deleted if unmerged work is confirmed disposable)
 - [ ] Resume re-runs R1 (auto-rebase) and R2 (env var verification) before restarting the agent
@@ -63,7 +63,7 @@ Robust worktree lifecycle management for the build system. Covers keeping worktr
 - Worktree creation for non-build purposes
 
 ## Cross-References
-- See also: cavekit-spec-sync.md (worktree changes must be on main before `/bp:revise` can scan them)
+- See also: cavekit-spec-sync.md (worktree changes must be on main before `/ck:revise` can scan them)
 - See also: cavekit-worktree.md (existing worktree creation and discovery primitives this domain builds on)
 - See also: cavekit-session.md (instance lifecycle triggers build lifecycle operations)
 

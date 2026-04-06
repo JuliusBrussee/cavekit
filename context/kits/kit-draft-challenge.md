@@ -32,7 +32,7 @@ Claude addresses critical findings automatically.
 - [ ] Advisory findings are collected and presented to the user alongside the kits (not auto-fixed)
 
 ### R4: Draft Flow Integration
-The design challenge integrates into the existing `/bp:draft` command flow.
+The design challenge integrates into the existing `/ck:sketch` command flow.
 - [ ] Inserted between Step 8 (cavekit-reviewer loop) and Step 9 (user review gate)
 - [ ] When Codex is unavailable, skip the design challenge — the cavekit-reviewer loop alone is sufficient (graceful degradation)
 - [ ] The user review gate (Step 9) now shows both the kits AND any advisory findings from Codex, so the user has full context
@@ -49,7 +49,7 @@ The prompt sent to Codex is purpose-built for design-level review.
 - Codex writing kits from scratch (Claude drafts, Codex challenges)
 - Codex reviewing implementation plans or build sites (that's the tier gate / inspector's job)
 - Multi-model consensus (only Claude + Codex, not additional models)
-- Challenging individual cavekit revisions (only the initial draft and `/bp:revise` outputs)
+- Challenging individual cavekit revisions (only the initial draft and `/ck:revise` outputs)
 
 ## Cross-References
 - See also: cavekit-codex-bridge.md (R1 for detection, R3 for invocation mechanism)

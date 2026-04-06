@@ -36,7 +36,7 @@ for archive_log in "$PROJECT_ROOT"/context/impl/archive/*/loop-log.md; do
 done
 
 if [[ ${#LOGS[@]} -eq 0 ]]; then
-  echo "No loop logs found. Run /bp:build first."
+  echo "No loop logs found. Run /ck:make first."
   exit 0
 fi
 

@@ -46,7 +46,7 @@ Creating and managing git worktrees for isolated agent execution. Each agent get
 
 ## Out of Scope
 - Git authentication/credentials
-- Merge conflict resolution (handled by `/bp:merge`)
+- Merge conflict resolution (handled by `/ck:merge`)
 - Non-Cavekit worktree management
 
 ## Cross-References

@@ -14,7 +14,7 @@ last_edited: "2026-03-20T00:00:00Z"
 | Task | Title | Cavekit | Requirement | Effort |
 |------|-------|-----------|-------------|--------|
 | T-001 | Add changelog section to cavekit format | cavekit-spec-sync.md | R2 | S |
-| T-002 | Ensure /bp:draft generates kits with empty changelog | cavekit-spec-sync.md | R2 | S |
+| T-002 | Ensure /ck:sketch generates kits with empty changelog | cavekit-spec-sync.md | R2 | S |
 | T-003 | Implement changelog append logic | cavekit-spec-sync.md | R2 | M |
 | T-004 | Merge main into existing worktree branch on build start | cavekit-build-lifecycle.md | R1 | M |
 | T-005 | Handle merge conflicts with user notification and options | cavekit-build-lifecycle.md | R1 | M |

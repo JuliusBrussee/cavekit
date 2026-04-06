@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PLUGIN_NAME="bp"
+PLUGIN_NAME="ck"
 PLUGIN_DIR="$HOME/plugins/$PLUGIN_NAME"
 MARKETPLACE_FILE="$HOME/.agents/plugins/marketplace.json"
 LEGACY_LINK="$HOME/.codex/cavekit"
@@ -33,18 +33,23 @@ fi
 
 for command_file in "$ROOT_DIR"/commands/*.md; do
   command_name="$(basename "$command_file" .md)"
-  prompt_path="$PROMPTS_DIR/bp-$command_name.md"
-  ln -sfn "$command_file" "$prompt_path"
+  # Primary ck- prefix
+  ln -sfn "$command_file" "$PROMPTS_DIR/ck-$command_name.md"
+  # Deprecated bp- alias
+  ln -sfn "$command_file" "$PROMPTS_DIR/bp-$command_name.md"
 done
 
-for prompt_path in "$PROMPTS_DIR"/bp-*.md; do
-  [[ -e "$prompt_path" || -L "$prompt_path" ]] || continue
-  prompt_name="$(basename "$prompt_path")"
-  command_name="${prompt_name#bp-}"
-  command_name="${command_name%.md}"
-  if [[ ! -f "$ROOT_DIR/commands/$command_name.md" ]]; then
-    rm -f "$prompt_path"
-  fi
+# Clean up stale prompts for both prefixes
+for prefix in ck bp; do
+  for prompt_path in "$PROMPTS_DIR"/${prefix}-*.md; do
+    [[ -e "$prompt_path" || -L "$prompt_path" ]] || continue
+    prompt_name="$(basename "$prompt_path")"
+    command_name="${prompt_name#${prefix}-}"
+    command_name="${command_name%.md}"
+    if [[ ! -f "$ROOT_DIR/commands/$command_name.md" ]]; then
+      rm -f "$prompt_path"
+    fi
+  done
 done
 ok "Linked Codex prompts at $PROMPTS_DIR"
 
@@ -55,10 +60,10 @@ import sys
 
 path = sys.argv[1]
 entry = {
-    "name": "bp",
+    "name": "ck",
     "source": {
         "source": "local",
-        "path": "./plugins/bp",
+        "path": "./plugins/ck",
     },
     "policy": {
         "installation": "AVAILABLE",
@@ -80,7 +85,7 @@ else:
     }
 
 plugins = data.setdefault("plugins", [])
-existing_index = next((i for i, plugin in enumerate(plugins) if plugin.get("name") == "bp"), None)
+existing_index = next((i for i, plugin in enumerate(plugins) if plugin.get("name") in ("ck", "bp")), None)
 if existing_index is None:
     plugins.append(entry)
 else:

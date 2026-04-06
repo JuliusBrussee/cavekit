@@ -305,7 +305,7 @@ Gap analysis is not a one-time activity. Run it:
 
 ### Collaborative Design in the Draft Phase
 
-The Draft phase (`/bp:draft`) now embeds brainstorming principles directly. When running in interactive mode (no arguments), the drafter follows a collaborative design process before generating any files:
+The Draft phase (`/ck:sketch`) now embeds brainstorming principles directly. When running in interactive mode (no arguments), the drafter follows a collaborative design process before generating any files:
 
 1. **Explore project context** — check existing files, docs, commits before asking questions
 2. **Ask clarifying questions one at a time** — understand purpose, constraints, success criteria
@@ -321,7 +321,7 @@ This process applies to EVERY project regardless of perceived simplicity. The de
 
 **YAGNI enforcement:** During the design conversation and cavekit generation, actively strip requirements the user did not ask for. Smaller kits are better kits.
 
-### With `bp:design-system`
+### With `ck:design-system`
 
 When DESIGN.md exists at the project root, kits for UI domains should reference design tokens in acceptance criteria. This creates a traceable chain: DESIGN.md -> cavekit acceptance criterion -> plan task -> implementation.
 
@@ -340,7 +340,7 @@ When a cavekit needs a visual pattern not yet defined in DESIGN.md, note it in t
 - [ ] Component uses card-like container [DESIGN.md: pattern not yet defined — flag for design update]
 ```
 
-### With `bp:validation-first`
+### With `ck:validation-first`
 
 Every acceptance criterion in a cavekit must map to at least one validation gate. When writing kits, think about which gate will verify each requirement:
 
@@ -353,11 +353,11 @@ Every acceptance criterion in a cavekit must map to at least one validation gate
 | "Application starts and displays main screen" | Gate 5: Launch Verification |
 | "UI matches design intent" | Gate 6: Human Review |
 
-### With `bp:context-architecture`
+### With `ck:context-architecture`
 
-Kits live in the `context/kits/` directory. See `bp:context-architecture` for the full context directory structure, CLAUDE.md conventions, and multi-repo strategies.
+Kits live in the `context/kits/` directory. See `ck:context-architecture` for the full context directory structure, CLAUDE.md conventions, and multi-repo strategies.
 
-### With `bp:impl-tracking`
+### With `ck:impl-tracking`
 
 As kits are implemented, progress is tracked in `context/impl/` documents. Dead ends discovered during implementation should be recorded to prevent future agents from retrying failed approaches.
 
