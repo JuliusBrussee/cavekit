@@ -105,12 +105,34 @@ Cavekit fixes all four.
 
 Instead of "prompt and pray," Cavekit puts a **specification layer** between your intent and the code.
 
-```
-                        ┌─── Task 1 ─── Agent A ───┐
-                        │                           │
-You ── /ck:sketch ──► Kits ── /ck:map ──► Build Site ──┤─── Task 2 ─── Agent B ───┤──► done
-                        │                           │
-                        └─── Task 3 ─── Agent C ───┘
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#2c2c2c', 'primaryTextColor': '#ddd', 'primaryBorderColor': '#555', 'lineColor': '#fff', 'secondaryColor': '#222', 'tertiaryColor': '#1a1a1a'}}}%%
+flowchart LR
+    %% Nodes
+    User([You])
+    Kits[Kits]
+    Site[(Build Site)]
+    Done([done])
+
+    %% Connections
+    User -- "/ck:sketch" --> Kits
+    Kits -- "/ck:map" --> Site
+
+    subgraph BuildLoop ["/ck:make (Parallel Execution)"]
+        direction LR
+        Site --> T1[Task 1] --> A1[Agent A]
+        Site --> T2[Task 2] --> A2[Agent B]
+        Site --> T3[Task 3] --> A3[Agent C]
+    end
+
+    A1 & A2 & A3 --> Done
+
+    %% Explicit Styling
+    style User fill:#2c2c2c,color:#fff,stroke:#fff
+    style Done fill:#2c2c2c,color:#fff,stroke:#fff
+    style Kits fill:#2c2c2c,color:#fff,stroke:#fff
+    style Site fill:#2c2c2c,color:#fff,stroke:#fff
+    style BuildLoop fill:#1c1c1c,stroke:#fff,stroke-width:1px,stroke-dasharray: 5 5,color:#fff
 ```
 
 Kits are the source of truth. Agents read them, build from them, validate against them. When something breaks, the system traces the failure back to the kit — not the code.
