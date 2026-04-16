@@ -16,7 +16,7 @@ func TestStore_SaveLoad(t *testing.T) {
 			Title:        "auth",
 			SitePath:     "/path/site.md",
 			WorktreePath: "/code/project-cavekit-auth",
-			TmuxSession:  "bp_auth",
+			SessionName:  "auth",
 			Status:       StatusRunning,
 			Program:      "claude",
 			CreatedAt:    time.Now(),

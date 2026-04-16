@@ -143,14 +143,26 @@ Spec is the product. Code is the derivative.
 
 ## Install
 
+macOS / Linux:
+
 ```bash
 git clone https://github.com/JuliusBrussee/cavekit.git ~/.cavekit
 cd ~/.cavekit && ./install.sh
 ```
 
+Windows (native bootstrapper):
+
+```powershell
+git clone https://github.com/JuliusBrussee/cavekit.git $HOME\.cavekit
+cd $HOME\.cavekit
+.\install.ps1
+```
+
 Registers the plugin with Claude Code, syncs into Codex marketplace, installs the `cavekit` CLI. Restart Claude Code after installing.
 
-**Requires:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code), git, macOS/Linux.
+Manual Windows smoke harness: [`scripts/windows-smoke.ps1`](scripts/windows-smoke.ps1)
+
+**Requires:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code), git, and Go. Native Windows bootstrap/install is supported. Full-screen attach is deferred; the Windows monitor uses captured scrollback in the Terminal tab instead.
 
 **Optional:** [Codex](https://github.com/openai/codex) (`npm install -g @openai/codex`) — adds adversarial review. Cavekit works without it. Codex makes it significantly harder to ship flawed specs and broken code.
 
@@ -504,9 +516,15 @@ Settings live in two places:
 
 | Command | What it does |
 |---------|-------------|
-| `cavekit monitor` | Interactive launcher — pick build sites, launch in tmux |
+| `cavekit monitor` | Interactive launcher — pick build sites and launch runtime sessions |
 | `cavekit status` | Show build site progress |
 | `cavekit kill` | Stop all sessions, clean up worktrees |
+| `cavekit install` | Install Cavekit, Claude plugin wiring, and Codex prompt sync |
+| `cavekit sync-codex` | Re-sync the local Codex plugin and prompts |
+| `cavekit setup-build` | Run the build setup flow |
+| `cavekit codex-review` | Run Codex adversarial review on the current diff |
+| `cavekit command-gate` | Run the command safety classifier / hook entrypoint |
+| `cavekit config` | Inspect or update Cavekit config values |
 | `cavekit version` | Print version |
 | `cavekit debug` | Show state file path and version |
 | `cavekit reset` | Clear persisted state |

@@ -3,19 +3,19 @@ package tui
 import (
 	"context"
 
-	"github.com/JuliusBrussee/cavekit/internal/tmux"
+	"github.com/JuliusBrussee/cavekit/internal/backend"
 )
 
-// PreviewTab captures and renders tmux pane content for the selected instance.
+// PreviewTab captures and renders session content for the selected instance.
 type PreviewTab struct {
-	tmuxMgr    *tmux.Manager
-	content    string
-	scrollMode bool
+	sessionBackend backend.SessionBackend
+	content        string
+	scrollMode     bool
 }
 
 // NewPreviewTab creates a preview tab.
-func NewPreviewTab(tmuxMgr *tmux.Manager) *PreviewTab {
-	return &PreviewTab{tmuxMgr: tmuxMgr}
+func NewPreviewTab(sessionBackend backend.SessionBackend) *PreviewTab {
+	return &PreviewTab{sessionBackend: sessionBackend}
 }
 
 // Capture refreshes the pane content for the given session.
@@ -25,12 +25,14 @@ func (p *PreviewTab) Capture(ctx context.Context, sessionName string) {
 		return
 	}
 
-	var content string
-	var err error
+	var (
+		content string
+		err     error
+	)
 	if p.scrollMode {
-		content, err = p.tmuxMgr.CaptureScrollback(ctx, sessionName)
+		content, err = p.sessionBackend.CaptureScrollback(ctx, sessionName)
 	} else {
-		content, err = p.tmuxMgr.CapturePane(ctx, sessionName)
+		content, err = p.sessionBackend.CapturePane(ctx, sessionName)
 	}
 	if err != nil {
 		p.content = "Failed to capture: " + err.Error()

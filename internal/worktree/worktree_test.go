@@ -2,18 +2,23 @@ package worktree
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/JuliusBrussee/cavekit/internal/exec"
 )
 
+func testPath(parts ...string) string {
+	return filepath.Join(parts...)
+}
+
 func TestWorktreePath(t *testing.T) {
 	tests := []struct {
 		root, site, want string
 	}{
-		{"/home/user/myproject", "auth", "/home/user/myproject-cavekit-auth"},
-		{"/code/cavekit", "build", "/code/cavekit-cavekit-build"},
+		{testPath("home", "user", "myproject"), "auth", testPath("home", "user", "myproject-cavekit-auth")},
+		{testPath("code", "cavekit"), "build", testPath("code", "cavekit-cavekit-build")},
 	}
 	for _, tt := range tests {
 		got := WorktreePath(tt.root, tt.site)
@@ -56,21 +61,24 @@ func TestManager_Create_NewBranch(t *testing.T) {
 	})
 
 	mgr := NewManager(mock)
-	path, err := mgr.Create(context.Background(), "/code/myproject", "auth")
+	projectRoot := testPath("code", "myproject")
+	path, err := mgr.Create(context.Background(), projectRoot, "auth")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
-	if path != "/code/myproject-cavekit-auth" {
+	if path != testPath("code", "myproject-cavekit-auth") {
 		t.Errorf("path = %q, unexpected", path)
 	}
 }
 
 func TestManager_Create_ExistingWorktree(t *testing.T) {
+	projectRoot := testPath("code", "myproject")
+	existing := testPath("code", "myproject-cavekit-auth")
 	mock := exec.NewMockExecutor()
 	mock.OnCommand("git", func(c exec.Call) (exec.Result, error) {
 		if strings.Contains(strings.Join(c.Args, " "), "worktree list") {
 			return exec.Result{
-				Stdout:   "worktree /code/myproject-cavekit-auth\nbranch refs/heads/cavekit/auth\n",
+				Stdout:   "worktree " + existing + "\nbranch refs/heads/cavekit/auth\n",
 				ExitCode: 0,
 			}, nil
 		}
@@ -78,11 +86,11 @@ func TestManager_Create_ExistingWorktree(t *testing.T) {
 	})
 
 	mgr := NewManager(mock)
-	path, err := mgr.Create(context.Background(), "/code/myproject", "auth")
+	path, err := mgr.Create(context.Background(), projectRoot, "auth")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
-	if path != "/code/myproject-cavekit-auth" {
+	if path != existing {
 		t.Errorf("path = %q, unexpected", path)
 	}
 	// Should have only called worktree list (no create commands)
@@ -100,7 +108,7 @@ func TestManager_Remove(t *testing.T) {
 	})
 
 	mgr := NewManager(mock)
-	err := mgr.Remove(context.Background(), "/code/myproject", "auth")
+	err := mgr.Remove(context.Background(), testPath("code", "myproject"), "auth")
 	if err != nil {
 		t.Fatalf("Remove: %v", err)
 	}
@@ -118,15 +126,15 @@ func TestManager_Remove(t *testing.T) {
 func TestManager_ProjectRoot(t *testing.T) {
 	mock := exec.NewMockExecutor()
 	mock.OnCommand("git", func(c exec.Call) (exec.Result, error) {
-		return exec.Result{Stdout: "/code/myproject\n", ExitCode: 0}, nil
+		return exec.Result{Stdout: testPath("code", "myproject") + "\n", ExitCode: 0}, nil
 	})
 
 	mgr := NewManager(mock)
-	root, err := mgr.ProjectRoot(context.Background(), "/code/myproject/src")
+	root, err := mgr.ProjectRoot(context.Background(), testPath("code", "myproject", "src"))
 	if err != nil {
 		t.Fatalf("ProjectRoot: %v", err)
 	}
-	if root != "/code/myproject" {
-		t.Errorf("root = %q, want /code/myproject", root)
+	if root != testPath("code", "myproject") {
+		t.Errorf("root = %q, want %q", root, testPath("code", "myproject"))
 	}
 }

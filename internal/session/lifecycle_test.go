@@ -2,37 +2,73 @@ package session
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/JuliusBrussee/cavekit/internal/exec"
-	"github.com/JuliusBrussee/cavekit/internal/tmux"
 	"github.com/JuliusBrussee/cavekit/internal/worktree"
 )
 
-func newTestManager() (*Manager, *exec.MockExecutor) {
+type fakeSessionBackend struct {
+	created  []string
+	killed   []string
+	commands []string
+	exists   map[string]bool
+}
+
+func newFakeSessionBackend() *fakeSessionBackend {
+	return &fakeSessionBackend{exists: make(map[string]bool)}
+}
+
+func (f *fakeSessionBackend) CreateSession(_ context.Context, name, _, _ string) error {
+	f.created = append(f.created, name)
+	f.exists[name] = true
+	return nil
+}
+
+func (f *fakeSessionBackend) Exists(_ context.Context, name string) bool {
+	return f.exists[name]
+}
+
+func (f *fakeSessionBackend) Kill(_ context.Context, name string) error {
+	f.killed = append(f.killed, name)
+	delete(f.exists, name)
+	return nil
+}
+
+func (f *fakeSessionBackend) ListSessions(context.Context) ([]string, error)        { return nil, nil }
+func (f *fakeSessionBackend) CapturePane(context.Context, string) (string, error)    { return "", nil }
+func (f *fakeSessionBackend) CaptureScrollback(context.Context, string) (string, error) {
+	return "", nil
+}
+func (f *fakeSessionBackend) SendKeys(context.Context, string, ...string) error { return nil }
+func (f *fakeSessionBackend) SendText(context.Context, string, string) error     { return nil }
+func (f *fakeSessionBackend) SendCommand(_ context.Context, name, cmd string) error {
+	f.commands = append(f.commands, fmt.Sprintf("%s:%s", name, cmd))
+	return nil
+}
+
+func newTestManager() (*Manager, *exec.MockExecutor, *fakeSessionBackend) {
 	mock := exec.NewMockExecutor()
-	mock.OnCommand("tmux", func(c exec.Call) (exec.Result, error) {
-		return exec.Result{ExitCode: 0}, nil
-	})
 	mock.OnCommand("git", func(c exec.Call) (exec.Result, error) {
 		args := strings.Join(c.Args, " ")
 		if strings.Contains(args, "worktree list") {
 			return exec.Result{Stdout: "", ExitCode: 0}, nil
 		}
 		if strings.Contains(args, "rev-parse --verify") {
-			return exec.Result{ExitCode: 1}, nil // branch doesn't exist
+			return exec.Result{ExitCode: 1}, nil
 		}
 		return exec.Result{ExitCode: 0}, nil
 	})
 
-	tmuxMgr := tmux.NewManager(mock)
+	sessionBackend := newFakeSessionBackend()
 	wtMgr := worktree.NewManager(mock)
-	return NewManager(tmuxMgr, wtMgr), mock
+	return NewManager(sessionBackend, wtMgr), mock, sessionBackend
 }
 
 func TestManager_Create(t *testing.T) {
-	mgr, _ := newTestManager()
+	mgr, _, _ := newTestManager()
 	inst := mgr.Create("auth", "/path/site.md", "auth", "claude")
 
 	if inst.Title != "auth" {
@@ -41,8 +77,8 @@ func TestManager_Create(t *testing.T) {
 	if inst.SitePath != "/path/site.md" {
 		t.Errorf("SitePath = %q", inst.SitePath)
 	}
-	if inst.TmuxSession != "bp_auth" {
-		t.Errorf("TmuxSession = %q", inst.TmuxSession)
+	if inst.SessionName != "auth" {
+		t.Errorf("SessionName = %q", inst.SessionName)
 	}
 	if inst.Status != StatusLoading {
 		t.Errorf("Status = %v, want Loading", inst.Status)
@@ -50,7 +86,7 @@ func TestManager_Create(t *testing.T) {
 }
 
 func TestManager_Start(t *testing.T) {
-	mgr, mock := newTestManager()
+	mgr, _, sessionBackend := newTestManager()
 	inst := mgr.Create("auth", "/path/site.md", "auth", "claude")
 
 	err := mgr.Start(context.Background(), inst, "/code/project", "auth", 0)
@@ -65,23 +101,19 @@ func TestManager_Start(t *testing.T) {
 		t.Error("WorktreePath should be set")
 	}
 
-	// Verify tmux send-keys was called with the build command
 	foundBuild := false
-	for _, c := range mock.Calls {
-		if c.Name == "tmux" {
-			args := strings.Join(c.Args, " ")
-			if strings.Contains(args, "/ck:make") && strings.Contains(args, "auth") {
-				foundBuild = true
-			}
+	for _, cmd := range sessionBackend.commands {
+		if strings.Contains(cmd, "/ck:make") && strings.Contains(cmd, "auth") {
+			foundBuild = true
 		}
 	}
 	if !foundBuild {
-		t.Error("should have sent /ck:make command to tmux")
+		t.Error("should have sent /ck:make command to the session backend")
 	}
 }
 
 func TestManager_Pause(t *testing.T) {
-	mgr, _ := newTestManager()
+	mgr, _, _ := newTestManager()
 	inst := mgr.Create("auth", "", "auth", "claude")
 	inst.Status = StatusRunning
 
@@ -92,7 +124,7 @@ func TestManager_Pause(t *testing.T) {
 }
 
 func TestManager_Kill(t *testing.T) {
-	mgr, _ := newTestManager()
+	mgr, _, _ := newTestManager()
 	inst := mgr.Create("auth", "", "auth", "claude")
 	inst.Status = StatusRunning
 

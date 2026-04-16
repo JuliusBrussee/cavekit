@@ -2,7 +2,7 @@
 name: ck-make
 description: "Implement a build site or plan — automatically parallelizes independent tasks and progresses through tiers autonomously"
 argument-hint: "[FILE] [--filter PATTERN] [--peer-review] [--max-iterations N] [--completion-promise TEXT]"
-allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh:*)", "Bash(${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh:*)", "Bash(git *)"]
+allowed-tools: ["Bash(cavekit:*)", "Bash(git *)"]
 ---
 
 > **Note:** `/bp:build`, `/ck:build`, `/bp:make` are deprecated aliases. Use `/ck:make` instead.
@@ -12,16 +12,16 @@ allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh:*)", "Bash(${
 This is the third phase of Cavekit. Execute the setup script:
 
 ```!
-"${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh" $ARGUMENTS
+cavekit setup-build $ARGUMENTS
 ```
 
 ## Resolve Execution Profile
 
 Before starting waves:
 
-1. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" summary` and report that exact line once.
-2. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model execution` and treat the result as `EXECUTION_MODEL`.
-3. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" caveman-active build` and treat the result as `CAVEMAN_ACTIVE` (true/false).
+1. Run `cavekit config summary` and report that exact line once.
+2. Run `cavekit config model execution` and treat the result as `EXECUTION_MODEL`.
+3. Run `cavekit config caveman-active build` and treat the result as `CAVEMAN_ACTIVE` (true/false).
 4. Use that exact `EXECUTION_MODEL` string in every `ck:task-builder` delegation below. Do not hard-code `opus`, `sonnet`, or `haiku` in this command.
 5. If `CAVEMAN_ACTIVE` is `true`, all your own wave logs, iteration summaries, and status reports in this command should use caveman-speak (drop articles, filler, pleasantries — keep technical terms exact, code blocks unchanged). Spec artifacts (kits, build sites, impl tracking field values) stay in normal prose.
 
@@ -151,7 +151,7 @@ Once the setup script completes (outputs the ralph prompt), you run the executio
 
    c. Otherwise, run the review inline (wait for it to complete before advancing):
       ```
-      scripts/codex-review.sh --base $TIER_START_REF
+      cavekit codex-review --base $TIER_START_REF
       ```
 
    d. **Severity-based gating** — after the review, source `scripts/codex-gate.sh` and run `bp_tier_gate`:

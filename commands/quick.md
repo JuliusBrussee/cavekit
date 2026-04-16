@@ -2,7 +2,7 @@
 name: ck-quick
 description: "Quick end-to-end: describe a feature, get it built — draft, architect, build, and inspect without stopping"
 argument-hint: "<feature description> [--skip-inspect] [--peer-review] [--max-iterations N]"
-allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh:*)", "Bash(${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh:*)", "Bash(git *)"]
+allowed-tools: ["Bash(cavekit:*)", "Bash(git *)"]
 ---
 
 > **Note:** `/bp:quick` is deprecated and will be removed in a future version. Use `/ck:quick` instead.
@@ -17,10 +17,10 @@ Run the full Cavekit pipeline (draft → architect → build → inspect) from a
 
 Before starting the pipeline:
 
-1. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" summary` and print that exact line once.
-2. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model reasoning` and store it as `REASONING_MODEL`.
-3. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model execution` and store it as `EXECUTION_MODEL`.
-4. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" model exploration` and store it as `EXPLORATION_MODEL`.
+1. Run `cavekit config summary` and print that exact line once.
+2. Run `cavekit config model reasoning` and store it as `REASONING_MODEL`.
+3. Run `cavekit config model execution` and store it as `EXECUTION_MODEL`.
+4. Run `cavekit config model exploration` and store it as `EXPLORATION_MODEL`.
 
 Use those resolved model strings explicitly in every delegated phase below. Do not rely on agent frontmatter model defaults.
 
@@ -137,7 +137,7 @@ Proceed immediately — no user gate.
 
 Run the **full build phase** exactly as `/ck:make` defines it. This is NOT simplified — the build loop runs with all its rigor:
 
-1. Execute `"${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh"` with any passthrough flags (`--peer-review`, `--max-iterations`)
+1. Execute `cavekit setup-build` with any passthrough flags (`--peer-review`, `--max-iterations`)
 2. Run the execution loop: compute frontier → dispatch tasks → merge → track → repeat
 3. Follow all circuit breakers (3 consecutive failures = BLOCKED, merge conflicts = stop)
 4. All critical rules apply: form coherent work packets, delegate only the packets that benefit from parallel execution, merge after every wave

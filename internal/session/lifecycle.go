@@ -7,60 +7,75 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/JuliusBrussee/cavekit/internal/tmux"
+	"github.com/JuliusBrussee/cavekit/internal/backend"
 	"github.com/JuliusBrussee/cavekit/internal/worktree"
 )
 
 // Manager orchestrates instance lifecycle operations.
 type Manager struct {
-	tmux     *tmux.Manager
-	worktree *worktree.Manager
+	sessionBackend backend.SessionBackend
+	worktree       *worktree.Manager
 }
 
 // NewManager creates a session manager.
-func NewManager(tmuxMgr *tmux.Manager, wtMgr *worktree.Manager) *Manager {
+func NewManager(sessionBackend backend.SessionBackend, wtMgr *worktree.Manager) *Manager {
 	return &Manager{
-		tmux:     tmuxMgr,
-		worktree: wtMgr,
+		sessionBackend: sessionBackend,
+		worktree:       wtMgr,
 	}
+}
+
+type backendMetadataProvider interface {
+	BackendMetadata(name string) (kind string, processID int, logPath string, worktreePath string, ok bool)
 }
 
 // Create allocates a new instance with the given title and site info.
 func (m *Manager) Create(title, sitePath, siteName, program string) *Instance {
 	inst := NewInstance(title, sitePath, program)
-	inst.TmuxSession = tmux.SessionName(siteName)
+	inst.SessionName = siteName
 	return inst
 }
 
-// Start creates the worktree and tmux session, then sends the build command.
+// Start creates the worktree and runtime session, then sends the build command.
 func (m *Manager) Start(ctx context.Context, inst *Instance, projectRoot, siteName string, startupDelay time.Duration) error {
 	inst.Status = StatusLoading
 
-	// Create worktree
 	wtPath, err := m.worktree.Create(ctx, projectRoot, siteName)
 	if err != nil {
 		return fmt.Errorf("create worktree: %w", err)
 	}
 	inst.WorktreePath = wtPath
 
-	// Create tmux session
-	err = m.tmux.CreateSession(ctx, siteName, wtPath, inst.Program)
-	if err != nil {
-		return fmt.Errorf("create tmux session: %w", err)
+	if err := m.sessionBackend.CreateSession(ctx, inst.SessionName, wtPath, inst.Program); err != nil {
+		return fmt.Errorf("create session: %w", err)
 	}
-	inst.TmuxSession = tmux.SessionName(siteName)
-	inst.Status = StatusRunning
 
-	// Wait for startup, then send the build command
+	inst.Status = StatusRunning
+	inst.BackendWorktree = wtPath
+	if provider, ok := m.sessionBackend.(backendMetadataProvider); ok {
+		kind, processID, logPath, worktreePath, found := provider.BackendMetadata(inst.SessionName)
+		if found {
+			inst.BackendKind = kind
+			inst.BackendPID = processID
+			inst.BackendLogPath = logPath
+			if worktreePath != "" {
+				inst.BackendWorktree = worktreePath
+			}
+		}
+	}
+
+	sendBuild := func() {
+		cmd := fmt.Sprintf("/ck:make --filter %s", siteName)
+		_ = m.sessionBackend.SendCommand(ctx, inst.SessionName, cmd)
+	}
+
 	if startupDelay > 0 {
 		go func() {
 			time.Sleep(startupDelay)
-			cmd := fmt.Sprintf("/ck:make --filter %s", siteName)
-			m.tmux.SendCommand(ctx, siteName, cmd)
+			sendBuild()
 		}()
 	} else {
-		cmd := fmt.Sprintf("/ck:make --filter %s", siteName)
-		m.tmux.SendCommand(ctx, siteName, cmd)
+		sendBuild()
 	}
 
 	return nil
@@ -73,28 +88,25 @@ func (m *Manager) Pause(inst *Instance) {
 
 // Resume re-attaches an instance to TUI tracking.
 func (m *Manager) Resume(ctx context.Context, inst *Instance) {
-	if m.tmux.Exists(ctx, inst.TmuxSession) {
+	if m.sessionBackend.Exists(ctx, inst.SessionName) {
 		inst.Status = StatusRunning
 	}
 }
 
-// Kill destroys the tmux session and optionally removes the worktree.
+// Kill destroys the runtime session and optionally removes the worktree.
 func (m *Manager) Kill(ctx context.Context, inst *Instance, projectRoot string, removeWorktree bool) error {
-	// Kill tmux session
-	if err := m.tmux.Kill(ctx, inst.TmuxSession); err != nil {
-		// Non-fatal: session might already be gone
+	if err := m.sessionBackend.Kill(ctx, inst.SessionName); err != nil {
+		// Non-fatal: session might already be gone.
 	}
 
-	// Archive impl state before worktree removal (R5: Archive on Stop)
 	if inst.WorktreePath != "" {
 		archiveImplState(inst.WorktreePath, inst.TasksDone)
 	}
 
 	if removeWorktree && inst.WorktreePath != "" {
-		// Derive site name from worktree path
 		siteName := deriveSiteNameFromWorktree(inst.WorktreePath, projectRoot)
 		if siteName != "" {
-			m.worktree.Remove(ctx, projectRoot, siteName)
+			_ = m.worktree.Remove(ctx, projectRoot, siteName)
 		}
 	}
 
@@ -119,13 +131,11 @@ func archiveImplState(wtPath string, tasksDone int) {
 		return
 	}
 
-	// Archive loop log
 	loopLog := filepath.Join(implDir, "loop-log.md")
 	if data, err := os.ReadFile(loopLog); err == nil {
-		os.WriteFile(filepath.Join(archiveDir, "loop-log.md"), data, 0o644)
+		_ = os.WriteFile(filepath.Join(archiveDir, "loop-log.md"), data, 0o644)
 	}
 
-	// Archive impl tracking files
 	entries, err := os.ReadDir(implDir)
 	if err != nil {
 		return
@@ -135,15 +145,13 @@ func archiveImplState(wtPath string, tasksDone int) {
 		if !entry.IsDir() && len(name) > 5 && name[:5] == "impl-" {
 			data, err := os.ReadFile(filepath.Join(implDir, name))
 			if err == nil {
-				os.WriteFile(filepath.Join(archiveDir, name), data, 0o644)
+				_ = os.WriteFile(filepath.Join(archiveDir, name), data, 0o644)
 			}
 		}
 	}
 }
 
 func deriveSiteNameFromWorktree(wtPath, projectRoot string) string {
-	// WorktreePath format: {root}/../{name}-cavekit-{site}
-	// We need to extract the site name
 	prefix := worktree.WorktreePath(projectRoot, "")
 	if len(wtPath) > len(prefix) {
 		return wtPath[len(prefix):]

@@ -1,8 +1,11 @@
-// Package session defines the instance model that ties together a tmux session,
+// Package session defines the instance model that ties together a runtime session,
 // git worktree, and site into a single manageable unit.
 package session
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // Status represents the current state of an instance.
 type Status int
@@ -50,20 +53,24 @@ func (s Status) Icon() string {
 	}
 }
 
-// Instance represents one Claude Code agent working on one site.
+// Instance represents one agent working on one site.
 type Instance struct {
-	Title        string    `json:"title"`
-	SitePath     string    `json:"site_path"`
-	WorktreePath string    `json:"worktree_path"`
-	TmuxSession  string    `json:"tmux_session"`
-	Status       Status    `json:"status"`
-	Program      string    `json:"program"`
-	CreatedAt    time.Time `json:"created_at"`
+	Title           string    `json:"title"`
+	SitePath        string    `json:"site_path"`
+	WorktreePath    string    `json:"worktree_path"`
+	SessionName     string    `json:"session_name"`
+	BackendKind     string    `json:"backend_kind,omitempty"`
+	BackendPID      int       `json:"backend_pid,omitempty"`
+	BackendLogPath  string    `json:"backend_log_path,omitempty"`
+	BackendWorktree string    `json:"backend_worktree,omitempty"`
+	Status          Status    `json:"status"`
+	Program         string    `json:"program"`
+	CreatedAt       time.Time `json:"created_at"`
 
 	// Progress fields (updated periodically from site tracking).
-	TasksDone  int    `json:"tasks_done"`
-	TasksTotal int    `json:"tasks_total"`
-	CurrentTier int   `json:"current_tier"`
+	TasksDone   int    `json:"tasks_done"`
+	TasksTotal  int    `json:"tasks_total"`
+	CurrentTier int    `json:"current_tier"`
 	CurrentTask string `json:"current_task"`
 
 	// Diff stats (updated periodically from worktree).
@@ -72,7 +79,7 @@ type Instance struct {
 	DiffRemoved int    `json:"diff_removed"`
 
 	// Health check state (from .claude/health-check.json in worktree).
-	HealthStatus   string `json:"health_status"`    // "healthy", "warning", "error"
+	HealthStatus   string `json:"health_status"` // "healthy", "warning", "error"
 	HealthErrors   int    `json:"health_errors"`
 	HealthWarnings int    `json:"health_warnings"`
 }
@@ -80,11 +87,11 @@ type Instance struct {
 // NewInstance creates a new instance with default values.
 func NewInstance(title, sitePath, program string) *Instance {
 	return &Instance{
-		Title:    title,
-		SitePath: sitePath,
-		Status:       StatusLoading,
-		Program:      program,
-		CreatedAt:    time.Now(),
+		Title:     title,
+		SitePath:  sitePath,
+		Status:    StatusLoading,
+		Program:   program,
+		CreatedAt: time.Now(),
 	}
 }
 
@@ -115,4 +122,88 @@ func itoa(n int) string {
 		n /= 10
 	}
 	return s
+}
+
+type instanceJSON struct {
+	Title           string    `json:"title"`
+	SitePath        string    `json:"site_path"`
+	WorktreePath    string    `json:"worktree_path"`
+	SessionName     string    `json:"session_name"`
+	LegacySession   string    `json:"tmux_session"`
+	BackendKind     string    `json:"backend_kind,omitempty"`
+	BackendPID      int       `json:"backend_pid,omitempty"`
+	BackendLogPath  string    `json:"backend_log_path,omitempty"`
+	BackendWorktree string    `json:"backend_worktree,omitempty"`
+	Status          Status    `json:"status"`
+	Program         string    `json:"program"`
+	CreatedAt       time.Time `json:"created_at"`
+	TasksDone       int       `json:"tasks_done"`
+	TasksTotal      int       `json:"tasks_total"`
+	CurrentTier     int       `json:"current_tier"`
+	CurrentTask     string    `json:"current_task"`
+	BranchName      string    `json:"branch_name"`
+	DiffAdded       int       `json:"diff_added"`
+	DiffRemoved     int       `json:"diff_removed"`
+	HealthStatus    string    `json:"health_status"`
+	HealthErrors    int       `json:"health_errors"`
+	HealthWarnings  int       `json:"health_warnings"`
+}
+
+func (i Instance) MarshalJSON() ([]byte, error) {
+	return json.Marshal(instanceJSON{
+		Title:           i.Title,
+		SitePath:        i.SitePath,
+		WorktreePath:    i.WorktreePath,
+		SessionName:     i.SessionName,
+		BackendKind:     i.BackendKind,
+		BackendPID:      i.BackendPID,
+		BackendLogPath:  i.BackendLogPath,
+		BackendWorktree: i.BackendWorktree,
+		Status:          i.Status,
+		Program:         i.Program,
+		CreatedAt:       i.CreatedAt,
+		TasksDone:       i.TasksDone,
+		TasksTotal:      i.TasksTotal,
+		CurrentTier:     i.CurrentTier,
+		CurrentTask:     i.CurrentTask,
+		BranchName:      i.BranchName,
+		DiffAdded:       i.DiffAdded,
+		DiffRemoved:     i.DiffRemoved,
+		HealthStatus:    i.HealthStatus,
+		HealthErrors:    i.HealthErrors,
+		HealthWarnings:  i.HealthWarnings,
+	})
+}
+
+func (i *Instance) UnmarshalJSON(data []byte) error {
+	var decoded instanceJSON
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return err
+	}
+
+	i.Title = decoded.Title
+	i.SitePath = decoded.SitePath
+	i.WorktreePath = decoded.WorktreePath
+	i.SessionName = decoded.SessionName
+	if i.SessionName == "" {
+		i.SessionName = decoded.LegacySession
+	}
+	i.BackendKind = decoded.BackendKind
+	i.BackendPID = decoded.BackendPID
+	i.BackendLogPath = decoded.BackendLogPath
+	i.BackendWorktree = decoded.BackendWorktree
+	i.Status = decoded.Status
+	i.Program = decoded.Program
+	i.CreatedAt = decoded.CreatedAt
+	i.TasksDone = decoded.TasksDone
+	i.TasksTotal = decoded.TasksTotal
+	i.CurrentTier = decoded.CurrentTier
+	i.CurrentTask = decoded.CurrentTask
+	i.BranchName = decoded.BranchName
+	i.DiffAdded = decoded.DiffAdded
+	i.DiffRemoved = decoded.DiffRemoved
+	i.HealthStatus = decoded.HealthStatus
+	i.HealthErrors = decoded.HealthErrors
+	i.HealthWarnings = decoded.HealthWarnings
+	return nil
 }

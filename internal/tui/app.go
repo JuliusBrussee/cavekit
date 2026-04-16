@@ -3,16 +3,15 @@ package tui
 
 import (
 	"context"
-	osexec "os/exec"
 	"path/filepath"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/JuliusBrussee/cavekit/internal/backend"
 	"github.com/JuliusBrussee/cavekit/internal/exec"
 	"github.com/JuliusBrussee/cavekit/internal/session"
 	"github.com/JuliusBrussee/cavekit/internal/site"
-	"github.com/JuliusBrussee/cavekit/internal/tmux"
 	"github.com/JuliusBrussee/cavekit/internal/worktree"
 )
 
@@ -50,7 +49,7 @@ type instanceCreatedMsg struct {
 	err  error
 }
 
-// attachFinishedMsg is sent when tmux attach returns.
+// attachFinishedMsg is sent when external attach returns.
 type attachFinishedMsg struct{ err error }
 
 // App is the main bubbletea model.
@@ -89,13 +88,14 @@ type App struct {
 	sessionMgr     *session.Manager
 	store          *session.Store
 	autoYes        *session.AutoYes
-	statusDetector *tmux.StatusDetector
+	statusDetector *backend.StatusDetector
+	sessionBackend backend.SessionBackend
+	caps           backend.Capabilities
 	projectRoot    string
 	program        string
 
-	// Input mode: keystrokes forwarded to tmux session
+	// Input mode: keystrokes forwarded to the selected runtime session.
 	inputMode bool
-	tmuxMgr   *tmux.Manager
 
 	// Tick counter for staggering
 	tickCount int
@@ -107,9 +107,9 @@ type App struct {
 // NewApp creates a new TUI application model.
 func NewApp(projectRoot, program string, autoYesEnabled bool) App {
 	executor := exec.NewRealExecutor()
-	tmuxMgr := tmux.NewManager(executor)
+	sessionBackend, caps := backend.New(executor)
 	wtMgr := worktree.NewManager(executor)
-	sessMgr := session.NewManager(tmuxMgr, wtMgr)
+	sessMgr := session.NewManager(sessionBackend, wtMgr)
 	store := session.NewStore("")
 
 	return App{
@@ -124,9 +124,9 @@ func NewApp(projectRoot, program string, autoYesEnabled bool) App {
 		dashboard:    NewDashboard(),
 
 		// Tab data sources
-		previewTab:  NewPreviewTab(tmuxMgr),
+		previewTab:  NewPreviewTab(sessionBackend),
 		diffTab:     NewDiffTab(wtMgr),
-		terminalTab: NewTerminalTab(tmuxMgr),
+		terminalTab: NewTerminalTab(sessionBackend, caps),
 
 		// Site picker
 		sitePicker: NewSitePicker(),
@@ -134,9 +134,10 @@ func NewApp(projectRoot, program string, autoYesEnabled bool) App {
 		// Session management
 		sessionMgr:     sessMgr,
 		store:          store,
-		autoYes:        session.NewAutoYes(tmuxMgr, autoYesEnabled),
-		statusDetector: tmux.NewStatusDetector(tmuxMgr),
-		tmuxMgr:        tmuxMgr,
+		autoYes:        session.NewAutoYes(sessionBackend, autoYesEnabled),
+		statusDetector: backend.NewStatusDetector(sessionBackend),
+		sessionBackend: sessionBackend,
+		caps:           caps,
 		projectRoot:    projectRoot,
 		program:        program,
 	}
@@ -171,12 +172,12 @@ func (a App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		switch action {
 		case ActionForwardKey:
-			if sel := a.instanceList.Selected(); sel != nil && sel.TmuxSession != "" {
+			if sel := a.instanceList.Selected(); sel != nil && sel.SessionName != "" {
 				a.forwardKey(key, msg)
 			}
 			return a, nil
 		case ActionEnterInput:
-			if sel := a.instanceList.Selected(); sel != nil && sel.TmuxSession != "" {
+			if sel := a.instanceList.Selected(); sel != nil && sel.SessionName != "" {
 				a.inputMode = true
 			}
 		case ActionExitInput:
@@ -278,8 +279,13 @@ func (a App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case ActionConfirmNo:
 			a.overlay.Hide()
 		case ActionOpen:
-			if sel := a.instanceList.Selected(); sel != nil && sel.TmuxSession != "" {
-				return a, a.attachCmd(sel.TmuxSession)
+			if sel := a.instanceList.Selected(); sel != nil && sel.SessionName != "" {
+				if a.caps.SupportsAttach {
+					return a, a.attachCmd(sel.SessionName)
+				}
+				a.terminalTab.EnsureSession(context.Background(), sel.Title, sel.WorktreePath, sel.SessionName)
+				a.activeTab = TabTerminal
+				a.tabContent.SetActiveTab(TabTerminal)
 			}
 		case ActionPush:
 			if sel := a.instanceList.Selected(); sel != nil && sel.WorktreePath != "" {
@@ -288,7 +294,7 @@ func (a App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case ActionCheckout:
 			if sel := a.instanceList.Selected(); sel != nil && sel.WorktreePath != "" {
-				a.terminalTab.EnsureSession(context.Background(), sel.Title, sel.WorktreePath)
+				a.terminalTab.EnsureSession(context.Background(), sel.Title, sel.WorktreePath, sel.SessionName)
 				a.activeTab = TabTerminal
 				a.tabContent.SetActiveTab(TabTerminal)
 			}
@@ -385,19 +391,19 @@ func (a *App) onTick() {
 				}
 			}
 
-			// Update instance status from tmux status detection
-			if inst.TmuxSession != "" {
-				paneStatus, err := a.statusDetector.Detect(ctx, inst.TmuxSession)
+			// Update instance status from runtime status detection
+			if inst.SessionName != "" {
+				paneStatus, err := a.statusDetector.Detect(ctx, inst.SessionName)
 				if err == nil {
 					switch paneStatus {
-					case tmux.PaneActive:
+					case backend.PaneActive:
 						inst.Status = session.StatusRunning
-					case tmux.PaneIdle, tmux.PanePrompt:
+					case backend.PaneIdle, backend.PanePrompt:
 						inst.Status = session.StatusReady
 					}
 				}
 
-				a.autoYes.Check(ctx, inst.TmuxSession)
+				a.autoYes.Check(ctx, inst.SessionName)
 			}
 		}
 	}
@@ -444,13 +450,13 @@ func (a *App) onTick() {
 
 		switch a.activeTab {
 		case TabPreview:
-			a.previewTab.Capture(ctx, sel.TmuxSession)
+			a.previewTab.Capture(ctx, sel.SessionName)
 			a.tabContent.SetPreview(a.previewTab.Content())
 		case TabDiff:
 			a.diffTab.Refresh(ctx, sel.WorktreePath)
 			a.tabContent.SetDiff(a.diffTab.Content())
 		case TabTerminal:
-			a.terminalTab.Capture(ctx, sel.Title)
+			a.terminalTab.Capture(ctx, sel.Title, sel.SessionName)
 			a.tabContent.SetTerminal(a.terminalTab.Content())
 		}
 	} else {
@@ -548,9 +554,14 @@ func (a *App) SetInstances(instances []*session.Instance) {
 	a.instanceList.SetInstances(instances)
 }
 
-// attachCmd suspends the TUI and attaches to a tmux session.
+// attachCmd suspends the TUI and attaches to a backend session when supported.
 func (a *App) attachCmd(sessionName string) tea.Cmd {
-	c := osexec.Command("tmux", "attach-session", "-t", sessionName)
+	c, err := backend.AttachCommand(sessionName)
+	if err != nil {
+		return func() tea.Msg {
+			return attachFinishedMsg{err: err}
+		}
+	}
 	return tea.ExecProcess(c, func(err error) tea.Msg {
 		return attachFinishedMsg{err: err}
 	})
@@ -631,38 +642,38 @@ func (a *App) launchSites(items []SitePickerItem) tea.Cmd {
 	}
 }
 
-// forwardKey sends a keystroke to the selected instance's tmux session.
+// forwardKey sends a keystroke to the selected instance's runtime session.
 func (a *App) forwardKey(key string, msg tea.KeyMsg) {
 	sel := a.instanceList.Selected()
-	if sel == nil || sel.TmuxSession == "" {
+	if sel == nil || sel.SessionName == "" {
 		return
 	}
 	ctx := context.Background()
 
 	switch key {
 	case "enter":
-		a.tmuxMgr.SendKeys(ctx, sel.TmuxSession, "Enter")
+		_ = a.sessionBackend.SendKeys(ctx, sel.SessionName, "Enter")
 	case "backspace":
-		a.tmuxMgr.SendKeys(ctx, sel.TmuxSession, "BSpace")
+		_ = a.sessionBackend.SendKeys(ctx, sel.SessionName, "BSpace")
 	case "tab":
-		a.tmuxMgr.SendKeys(ctx, sel.TmuxSession, "Tab")
+		_ = a.sessionBackend.SendKeys(ctx, sel.SessionName, "Tab")
 	case "up":
-		a.tmuxMgr.SendKeys(ctx, sel.TmuxSession, "Up")
+		_ = a.sessionBackend.SendKeys(ctx, sel.SessionName, "Up")
 	case "down":
-		a.tmuxMgr.SendKeys(ctx, sel.TmuxSession, "Down")
+		_ = a.sessionBackend.SendKeys(ctx, sel.SessionName, "Down")
 	case "left":
-		a.tmuxMgr.SendKeys(ctx, sel.TmuxSession, "Left")
+		_ = a.sessionBackend.SendKeys(ctx, sel.SessionName, "Left")
 	case "right":
-		a.tmuxMgr.SendKeys(ctx, sel.TmuxSession, "Right")
+		_ = a.sessionBackend.SendKeys(ctx, sel.SessionName, "Right")
 	case " ":
-		a.tmuxMgr.SendKeys(ctx, sel.TmuxSession, "Space")
+		_ = a.sessionBackend.SendKeys(ctx, sel.SessionName, "Space")
 	case "ctrl+c":
-		a.tmuxMgr.SendKeys(ctx, sel.TmuxSession, "C-c")
+		_ = a.sessionBackend.SendKeys(ctx, sel.SessionName, "C-c")
 	case "ctrl+d":
-		a.tmuxMgr.SendKeys(ctx, sel.TmuxSession, "C-d")
+		_ = a.sessionBackend.SendKeys(ctx, sel.SessionName, "C-d")
 	default:
 		if len(key) == 1 {
-			a.tmuxMgr.SendKeys(ctx, sel.TmuxSession, key)
+			_ = a.sessionBackend.SendKeys(ctx, sel.SessionName, key)
 		}
 	}
 }
@@ -681,9 +692,8 @@ func Run(projectRoot, program string, autoYes bool) error {
 	instances, _ := app.store.Load()
 	if len(instances) > 0 {
 		ctx := context.Background()
-		tmuxMgr := tmux.NewManager(exec.NewRealExecutor())
 		for _, inst := range instances {
-			if inst.TmuxSession != "" && !tmuxMgr.Exists(ctx, inst.TmuxSession) {
+			if inst.SessionName != "" && !app.sessionBackend.Exists(ctx, inst.SessionName) {
 				inst.Status = session.StatusDone
 			}
 		}

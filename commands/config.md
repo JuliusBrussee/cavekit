@@ -2,7 +2,7 @@
 name: ck-config
 description: Show or update Cavekit execution model presets
 argument-hint: "[list | preset <expensive|quality|balanced|fast> [--global]]"
-allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh:*)"]
+allowed-tools: ["Bash(cavekit:*)"]
 ---
 
 > **Note:** `/bp:config` is deprecated and will be removed in a future version. Use `/ck:config` instead.
@@ -26,7 +26,7 @@ If the arguments do not match one of those forms, show this usage summary and st
 
 ## No Arguments: Show Effective Configuration
 
-1. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" show`
+1. Run `cavekit config show`
 2. Present:
    - Effective preset
    - Reasoning / execution / exploration models
@@ -35,19 +35,19 @@ If the arguments do not match one of those forms, show this usage summary and st
 
 ## `list`: Show Built-In Presets
 
-1. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" presets`
+1. Run `cavekit config presets`
 2. Present the preset table to the user
 
 ## `preset <name>`: Write Configuration
 
-1. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" init`
-2. If `--global` is present, run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" set bp_model_preset {parsed preset name} --global`
-3. Otherwise run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" set bp_model_preset {parsed preset name} --project`
-4. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh" show`
+1. Run `cavekit config init`
+2. If `--global` is present, run `cavekit config preset {parsed preset name} --global`
+3. Otherwise run `cavekit config preset {parsed preset name}`
+4. Run `cavekit config show`
 5. Confirm the new effective preset and the file that was updated
 
 ## Rules
 
-- Do not edit config files manually in this command; always go through `bp-config.sh`
-- Let `bp-config.sh` reject invalid preset names with its own validation error
+- Do not edit config files manually in this command; always go through `cavekit config`
+- Let `cavekit config` reject invalid preset names with its own validation error
 - After a successful write, always show the new effective configuration

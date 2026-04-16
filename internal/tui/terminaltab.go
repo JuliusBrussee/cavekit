@@ -3,48 +3,65 @@ package tui
 import (
 	"context"
 
-	"github.com/JuliusBrussee/cavekit/internal/tmux"
+	"github.com/JuliusBrussee/cavekit/internal/backend"
 )
 
-// TerminalTab manages a separate tmux session for shell access in the worktree.
+// TerminalTab manages terminal content for the selected instance.
 type TerminalTab struct {
-	tmuxMgr  *tmux.Manager
-	sessions map[string]string // instance title → terminal session name
-	content  string
+	sessionBackend backend.SessionBackend
+	caps           backend.Capabilities
+	sessions       map[string]string
+	content        string
 }
 
 // NewTerminalTab creates a terminal tab.
-func NewTerminalTab(tmuxMgr *tmux.Manager) *TerminalTab {
+func NewTerminalTab(sessionBackend backend.SessionBackend, caps backend.Capabilities) *TerminalTab {
 	return &TerminalTab{
-		tmuxMgr:  tmuxMgr,
-		sessions: make(map[string]string),
+		sessionBackend: sessionBackend,
+		caps:           caps,
+		sessions:       make(map[string]string),
 	}
 }
 
-// EnsureSession creates a terminal session for the instance if it doesn't exist.
-func (t *TerminalTab) EnsureSession(ctx context.Context, instanceTitle, worktreePath string) string {
-	sessionName := "bp_term_" + instanceTitle
+// EnsureSession creates a terminal session for the instance if the backend supports one.
+func (t *TerminalTab) EnsureSession(ctx context.Context, instanceTitle, worktreePath, primarySessionName string) string {
+	if !t.caps.SupportsShellTerminal {
+		return primarySessionName
+	}
 
+	sessionName := "term_" + instanceTitle
 	if _, exists := t.sessions[instanceTitle]; !exists {
-		// Create the terminal session
-		err := t.tmuxMgr.CreateSession(ctx, "term_"+instanceTitle, worktreePath, "zsh")
-		if err == nil {
+		if err := t.sessionBackend.CreateSession(ctx, sessionName, worktreePath, backend.DefaultTerminalProgram()); err == nil {
 			t.sessions[instanceTitle] = sessionName
 		}
 	}
 
-	return sessionName
+	return t.sessions[instanceTitle]
 }
 
-// Capture updates the terminal pane content.
-func (t *TerminalTab) Capture(ctx context.Context, instanceTitle string) {
+// Capture updates the terminal content.
+func (t *TerminalTab) Capture(ctx context.Context, instanceTitle, primarySessionName string) {
+	if !t.caps.SupportsShellTerminal {
+		if primarySessionName == "" {
+			t.content = "Open a running agent to view full scrollback."
+			return
+		}
+		content, err := t.sessionBackend.CaptureScrollback(ctx, primarySessionName)
+		if err != nil {
+			t.content = "Terminal session error: " + err.Error()
+			return
+		}
+		t.content = content
+		return
+	}
+
 	sessionName, exists := t.sessions[instanceTitle]
 	if !exists {
 		t.content = "Press Enter to open terminal."
 		return
 	}
 
-	content, err := t.tmuxMgr.CapturePane(ctx, sessionName)
+	content, err := t.sessionBackend.CapturePane(ctx, sessionName)
 	if err != nil {
 		t.content = "Terminal session error: " + err.Error()
 		return
@@ -55,18 +72,24 @@ func (t *TerminalTab) Capture(ctx context.Context, instanceTitle string) {
 // Content returns the current terminal content.
 func (t *TerminalTab) Content() string {
 	if t.content == "" {
-		return "Press Enter to open terminal."
+		if t.caps.SupportsShellTerminal {
+			return "Press Enter to open terminal."
+		}
+		return "Select an agent and open the Terminal tab to view scrollback."
 	}
 	return t.content
 }
 
-// HasSession returns true if a terminal session exists for the instance.
+// HasSession returns true if the terminal content is available.
 func (t *TerminalTab) HasSession(instanceTitle string) bool {
+	if !t.caps.SupportsShellTerminal {
+		return true
+	}
 	_, exists := t.sessions[instanceTitle]
 	return exists
 }
 
-// SessionName returns the tmux session name for the instance's terminal.
+// SessionName returns the session name backing the instance's terminal.
 func (t *TerminalTab) SessionName(instanceTitle string) string {
 	return t.sessions[instanceTitle]
 }

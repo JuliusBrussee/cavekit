@@ -1,22 +1,51 @@
 package tui
 
 import (
+	"context"
 	"strings"
 	"testing"
 
+	"github.com/JuliusBrussee/cavekit/internal/backend"
 	"github.com/JuliusBrussee/cavekit/internal/exec"
 	"github.com/JuliusBrussee/cavekit/internal/site"
-	"github.com/JuliusBrussee/cavekit/internal/tmux"
 	"github.com/JuliusBrussee/cavekit/internal/worktree"
 )
 
+type fakeSessionBackend struct {
+	panes       map[string]string
+	scrollbacks map[string]string
+	created     []string
+}
+
+func newFakeSessionBackend() *fakeSessionBackend {
+	return &fakeSessionBackend{
+		panes:       make(map[string]string),
+		scrollbacks: make(map[string]string),
+	}
+}
+
+func (f *fakeSessionBackend) CreateSession(_ context.Context, name, _, _ string) error {
+	f.created = append(f.created, name)
+	return nil
+}
+
+func (f *fakeSessionBackend) Exists(context.Context, string) bool                   { return true }
+func (f *fakeSessionBackend) Kill(context.Context, string) error                    { return nil }
+func (f *fakeSessionBackend) ListSessions(context.Context) ([]string, error)        { return nil, nil }
+func (f *fakeSessionBackend) SendKeys(context.Context, string, ...string) error     { return nil }
+func (f *fakeSessionBackend) SendText(context.Context, string, string) error        { return nil }
+func (f *fakeSessionBackend) SendCommand(context.Context, string, string) error     { return nil }
+func (f *fakeSessionBackend) CapturePane(_ context.Context, name string) (string, error) {
+	return f.panes[name], nil
+}
+func (f *fakeSessionBackend) CaptureScrollback(_ context.Context, name string) (string, error) {
+	return f.scrollbacks[name], nil
+}
+
 func TestPreviewTab_Content(t *testing.T) {
-	mock := exec.NewMockExecutor()
-	mock.OnCommand("tmux", func(c exec.Call) (exec.Result, error) {
-		return exec.Result{Stdout: "$ claude\nWorking...\n", ExitCode: 0}, nil
-	})
-	mgr := tmux.NewManager(mock)
-	preview := NewPreviewTab(mgr)
+	backend := newFakeSessionBackend()
+	backend.panes["test"] = "$ claude\nWorking...\n"
+	preview := NewPreviewTab(backend)
 
 	preview.Capture(nil, "test")
 	content := preview.Content()
@@ -26,9 +55,7 @@ func TestPreviewTab_Content(t *testing.T) {
 }
 
 func TestPreviewTab_Empty(t *testing.T) {
-	mock := exec.NewMockExecutor()
-	mgr := tmux.NewManager(mock)
-	preview := NewPreviewTab(mgr)
+	preview := NewPreviewTab(newFakeSessionBackend())
 
 	content := preview.Content()
 	if !strings.Contains(content, "No instance") {
@@ -58,9 +85,7 @@ func TestDiffTab_Content(t *testing.T) {
 }
 
 func TestTerminalTab_NoSession(t *testing.T) {
-	mock := exec.NewMockExecutor()
-	mgr := tmux.NewManager(mock)
-	term := NewTerminalTab(mgr)
+	term := NewTerminalTab(newFakeSessionBackend(), backend.Capabilities{SupportsShellTerminal: true})
 
 	if term.HasSession("test") {
 		t.Error("should have no session initially")

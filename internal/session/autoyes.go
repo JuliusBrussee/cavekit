@@ -3,22 +3,22 @@ package session
 import (
 	"context"
 
-	"github.com/JuliusBrussee/cavekit/internal/tmux"
+	"github.com/JuliusBrussee/cavekit/internal/backend"
 )
 
 // AutoYes monitors pane content and auto-approves permission prompts.
 type AutoYes struct {
-	tmuxMgr  *tmux.Manager
-	detector *tmux.StatusDetector
-	enabled  bool
+	sessionBackend backend.SessionBackend
+	detector       *backend.StatusDetector
+	enabled        bool
 }
 
 // NewAutoYes creates an auto-yes handler.
-func NewAutoYes(tmuxMgr *tmux.Manager, enabled bool) *AutoYes {
+func NewAutoYes(sessionBackend backend.SessionBackend, enabled bool) *AutoYes {
 	return &AutoYes{
-		tmuxMgr:  tmuxMgr,
-		detector: tmux.NewStatusDetector(tmuxMgr),
-		enabled:  enabled,
+		sessionBackend: sessionBackend,
+		detector:       backend.NewStatusDetector(sessionBackend),
+		enabled:        enabled,
 	}
 }
 
@@ -35,13 +35,8 @@ func (a *AutoYes) Check(ctx context.Context, name string) bool {
 	}
 
 	switch status {
-	case tmux.PanePrompt:
-		// Send Enter to approve the permission prompt
-		a.tmuxMgr.SendEnter(ctx, name)
-		return true
-	case tmux.PaneTrust:
-		// Send Enter to dismiss trust prompt
-		a.tmuxMgr.SendEnter(ctx, name)
+	case backend.PanePrompt, backend.PaneTrust:
+		_ = a.sessionBackend.SendKeys(ctx, name, "Enter")
 		return true
 	}
 

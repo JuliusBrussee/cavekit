@@ -6,11 +6,13 @@ import (
 	"os"
 	osexec "os/exec"
 	"path/filepath"
+	"runtime"
+	"strings"
 
+	"github.com/JuliusBrussee/cavekit/internal/backend"
 	"github.com/JuliusBrussee/cavekit/internal/exec"
 	"github.com/JuliusBrussee/cavekit/internal/site"
 	"github.com/JuliusBrussee/cavekit/internal/session"
-	"github.com/JuliusBrussee/cavekit/internal/tmux"
 	"github.com/JuliusBrussee/cavekit/internal/tui"
 	"github.com/JuliusBrussee/cavekit/internal/worktree"
 )
@@ -18,18 +20,27 @@ import (
 const version = "v0.1.0"
 
 func main() {
-	cmd := "monitor"
-	if len(os.Args) > 1 {
-		cmd = os.Args[1]
-	}
+	cmd, args := parseCLI(os.Args[1:])
 
 	switch cmd {
 	case "monitor", "":
-		runMonitor()
+		runMonitor(args)
 	case "status":
 		runStatus()
 	case "kill":
 		runKill()
+	case "install":
+		runInstall(args)
+	case "sync-codex":
+		runSyncCodex(args)
+	case "setup-build":
+		runSetupBuild(args)
+	case "codex-review":
+		runCodexReview(args)
+	case "command-gate":
+		runCommandGate(args)
+	case "config":
+		runConfig(args)
 	case "version":
 		fmt.Println("cavekit", version)
 	case "debug":
@@ -38,18 +49,62 @@ func main() {
 		runReset()
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command: %s\n", cmd)
-		fmt.Fprintln(os.Stderr, "usage: cavekit [monitor|status|kill|version|debug|reset]")
+		fmt.Fprintln(os.Stderr, usage())
 		os.Exit(1)
 	}
 }
 
-func runMonitor() {
+func parseCLI(args []string) (string, []string) {
+	if len(args) == 0 {
+		return "monitor", nil
+	}
+	return normalizeCommand(args[0]), args[1:]
+}
+
+func normalizeCommand(arg string) string {
+	switch arg {
+	case "", "--monitor":
+		return "monitor"
+	case "--status":
+		return "status"
+	case "--kill":
+		return "kill"
+	case "--version":
+		return "version"
+	case "--debug":
+		return "debug"
+	case "--reset":
+		return "reset"
+	default:
+		return arg
+	}
+}
+
+func usage() string {
+	commands := []string{
+		"monitor",
+		"status",
+		"kill",
+		"install",
+		"sync-codex",
+		"setup-build",
+		"codex-review",
+		"command-gate",
+		"config",
+		"version",
+		"debug",
+		"reset",
+	}
+	return "usage: cavekit [" + strings.Join(commands, "|") + "]"
+}
+
+func runMonitor(args []string) {
 	// Parse flags
 	program := "claude"
 	autoYes := false
-	for i, arg := range os.Args {
-		if (arg == "--program" || arg == "-p") && i+1 < len(os.Args) {
-			program = os.Args[i+1]
+	for i, arg := range args {
+		if (arg == "--program" || arg == "-p") && i+1 < len(args) {
+			program = args[i+1]
 		}
 		if arg == "--autoyes" || arg == "-y" {
 			autoYes = true
@@ -82,9 +137,10 @@ func runMonitor() {
 func runStatus() {
 	executor := exec.NewRealExecutor()
 	wtMgr := worktree.NewManager(executor)
+	ctx := context.Background()
 
 	cwd, _ := os.Getwd()
-	root, err := wtMgr.ProjectRoot(nil, cwd)
+	root, err := wtMgr.ProjectRoot(ctx, cwd)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "not in a git repo: %s\n", err)
 		os.Exit(1)
@@ -145,17 +201,18 @@ func computeWorktreeProgress(wtPath string) (done, total int) {
 
 func runKill() {
 	executor := exec.NewRealExecutor()
-	tmuxMgr := tmux.NewManager(executor)
+	sessionBackend, _ := backend.New(executor)
 	wtMgr := worktree.NewManager(executor)
+	ctx := context.Background()
 
 	cwd, _ := os.Getwd()
-	root, _ := wtMgr.ProjectRoot(nil, cwd)
+	root, _ := wtMgr.ProjectRoot(ctx, cwd)
 
-	// Kill tmux sessions
-	sessions, _ := tmuxMgr.ListSessions(nil)
+	// Kill backend sessions
+	sessions, _ := sessionBackend.ListSessions(ctx)
 	killed := 0
 	for _, s := range sessions {
-		tmuxMgr.Kill(nil, s)
+		_ = sessionBackend.Kill(ctx, s)
 		killed++
 	}
 
@@ -163,7 +220,7 @@ func runKill() {
 	worktrees, _ := worktree.DiscoverAll(root)
 	cleaned := 0
 	for _, wt := range worktrees {
-		wtMgr.Remove(nil, root, wt.SiteName)
+		_ = wtMgr.Remove(ctx, root, wt.SiteName)
 		cleaned++
 	}
 
@@ -187,11 +244,13 @@ func runReset() {
 }
 
 func preflight(program string) error {
-	if _, err := osexec.LookPath("tmux"); err != nil {
-		return fmt.Errorf("tmux not installed")
-	}
 	if _, err := osexec.LookPath("git"); err != nil {
 		return fmt.Errorf("git not installed")
+	}
+	if runtime.GOOS != "windows" {
+		if _, err := osexec.LookPath("tmux"); err != nil {
+			return fmt.Errorf("tmux not installed")
+		}
 	}
 	if _, err := osexec.LookPath(program); err != nil {
 		return fmt.Errorf("%s not installed (use --program to override)", program)
