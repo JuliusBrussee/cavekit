@@ -36,7 +36,7 @@ Send ambiguous commands to Codex (gpt-5.4-mini) for safety classification.
 
 ### R4: Claude Permission Integration
 Integrate with Claude Code's existing allow/block permission system rather than replacing it.
-- [ ] Commands already explicitly allowed in Claude's settings (e.g., `Bash(go test:*)`) bypass the gate entirely
+- [ ] Commands already explicitly allowed in Claude's settings (e.g., `Bash(go test *)`) bypass the gate entirely
 - [ ] Commands already explicitly blocked in Claude's settings are blocked before the gate runs
 - [ ] The gate only evaluates commands that would otherwise prompt the user for permission
 - [ ] Gate verdicts respect the same format Claude's permission system uses

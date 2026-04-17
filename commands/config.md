@@ -2,7 +2,7 @@
 name: ck-config
 description: Show or update Cavekit execution model presets
 argument-hint: "[list | preset <expensive|quality|balanced|fast> [--global]]"
-allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh:*)"]
+allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh*)"]
 ---
 
 > **Note:** `/bp:config` is deprecated and will be removed in a future version. Use `/ck:config` instead.

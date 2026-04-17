@@ -2,7 +2,7 @@
 name: ck-judge
 description: "Invoke Codex adversarial review on demand — diffs current tier against worktree base and outputs findings"
 argument-hint: "[--base REF]"
-allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/codex-review.sh:*)"]
+allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/codex-review.sh*)"]
 ---
 
 > **Note:** `/bp:codex-review`, `/ck:codex-review`, `/bp:judge` are deprecated aliases. Use `/ck:judge` instead.
@@ -13,11 +13,7 @@ Run an on-demand adversarial code review using the Codex CLI. This sends the cur
 
 ## Execution
 
-Run the review script, forwarding any arguments the user provided:
-
-```!
-"${CLAUDE_PLUGIN_ROOT}/scripts/codex-review.sh" $ARGUMENTS
-```
+Run the review script, forwarding any arguments the user provided: `"${CLAUDE_PLUGIN_ROOT}/scripts/codex-review.sh" $ARGUMENTS`.
 
 ## Behavior
 

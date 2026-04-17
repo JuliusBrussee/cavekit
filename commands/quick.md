@@ -2,7 +2,7 @@
 name: ck-quick
 description: "Quick end-to-end: describe a feature, get it built — draft, architect, build, and inspect without stopping"
 argument-hint: "<feature description> [--skip-inspect] [--peer-review] [--max-iterations N]"
-allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh:*)", "Bash(${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh:*)", "Bash(git *)"]
+allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh*)", "Bash(${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh*)", "Bash(git *)"]
 ---
 
 > **Note:** `/bp:quick` is deprecated and will be removed in a future version. Use `/ck:quick` instead.

@@ -2,18 +2,14 @@
 name: ck-make
 description: "Implement a build site or plan — automatically parallelizes independent tasks and progresses through tiers autonomously"
 argument-hint: "[FILE] [--filter PATTERN] [--peer-review] [--max-iterations N] [--completion-promise TEXT]"
-allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh:*)", "Bash(${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh:*)", "Bash(git *)"]
+allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh*)", "Bash(${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh*)", "Bash(git *)"]
 ---
 
 > **Note:** `/bp:build`, `/ck:build`, `/bp:make` are deprecated aliases. Use `/ck:make` instead.
 
 # Cavekit Build — Autonomous Implementation
 
-This is the third phase of Cavekit. Execute the setup script:
-
-```!
-"${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh" $ARGUMENTS
-```
+This is the third phase of Cavekit. Run `"${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh" $ARGUMENTS`.
 
 ## Resolve Execution Profile
 
