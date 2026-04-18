@@ -3,38 +3,18 @@ package tmux
 import (
 	"os/exec"
 
-	"golang.org/x/sys/unix"
+	"golang.org/x/term"
 )
 
 // makeRaw sets the terminal to raw mode and returns the original state.
-func makeRaw(fd uintptr) (*unix.Termios, error) {
-	termios, err := unix.IoctlGetTermios(int(fd), unix.TIOCGETA)
-	if err != nil {
-		return nil, err
-	}
-
-	oldState := *termios
-
-	// Set raw mode
-	termios.Iflag &^= unix.IGNBRK | unix.BRKINT | unix.PARMRK | unix.ISTRIP | unix.INLCR | unix.IGNCR | unix.ICRNL | unix.IXON
-	termios.Oflag &^= unix.OPOST
-	termios.Lflag &^= unix.ECHO | unix.ECHONL | unix.ICANON | unix.ISIG | unix.IEXTEN
-	termios.Cflag &^= unix.CSIZE | unix.PARENB
-	termios.Cflag |= unix.CS8
-	termios.Cc[unix.VMIN] = 1
-	termios.Cc[unix.VTIME] = 0
-
-	if err := unix.IoctlSetTermios(int(fd), unix.TIOCSETA, termios); err != nil {
-		return nil, err
-	}
-
-	return &oldState, nil
+func makeRaw(fd uintptr) (*term.State, error) {
+	return term.MakeRaw(int(fd))
 }
 
 // restoreTerminal restores the terminal to its original state.
-func restoreTerminal(fd uintptr, state *unix.Termios) {
+func restoreTerminal(fd uintptr, state *term.State) {
 	if state != nil {
-		unix.IoctlSetTermios(int(fd), unix.TIOCSETA, state)
+		_ = term.Restore(int(fd), state)
 	}
 }
 
