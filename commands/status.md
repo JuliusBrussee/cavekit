@@ -1,8 +1,8 @@
 ---
 name: ck-status
-description: "Show build site progress and live runtime state. With --watch, tails the dashboard until interrupted."
-argument-hint: "[--watch] [--interval SECONDS] [--filter PATTERN]"
-allowed-tools: ["Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/cavekit-tools.cjs:*)", "Bash(cat .cavekit/*)", "Bash(ls .cavekit/*)", "Bash(sleep *)", "Read(*)", "Glob(*)", "Grep(*)"]
+description: "Show build site progress and live runtime state. With --watch, tails the dashboard until interrupted. `--team` delegates to `cavekit team status`."
+argument-hint: "[--watch] [--interval SECONDS] [--filter PATTERN] [--team] [--json]"
+allowed-tools: ["Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/cavekit-tools.cjs:*)", "Bash(cavekit team:*)", "Bash(cat .cavekit/*)", "Bash(ls .cavekit/*)", "Bash(sleep *)", "Read(*)", "Glob(*)", "Grep(*)"]
 ---
 
 **What this does:** Shows task frontier, completion, and runtime state. Default prints one snapshot. With `--watch`, refreshes every few seconds.
@@ -13,6 +13,16 @@ allowed-tools: ["Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/cavekit-tools.cjs:*)", 
 - `--watch` — refresh repeatedly until interrupted (default interval: 3s)
 - `--interval N` — seconds between frames (only meaningful with `--watch`)
 - `--filter PATTERN` — scope the site match
+- `--team` — delegate to `cavekit team status`
+- `--json` — when used with `--team`, emit the machine-readable `cavekit.team.v1` payload
+
+If `--team` is present, do not run the build-site progress flow below. Instead shell out directly:
+
+```bash
+cavekit team status $ARGUMENTS
+```
+
+Propagate its exit code unchanged.
 
 ## Step 0: Runtime state (when `.cavekit/` exists)
 

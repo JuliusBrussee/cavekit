@@ -113,6 +113,16 @@ done
 BP_PRESET_SUMMARY="$(bp_config_summary_line)"
 echo "$BP_PRESET_SUMMARY"
 
+# ─── Team-mode gate ─────────────────────────────────────────────────────────
+
+if git ls-files --error-unmatch .cavekit/team/ledger.jsonl >/dev/null 2>&1; then
+  if [[ ! -f ".cavekit/team/identity.json" ]]; then
+    echo "❌ Team mode is initialized but this checkout has not joined yet." >&2
+    echo "   Run: cavekit team join" >&2
+    exit 10
+  fi
+fi
+
 # ─── Clean stale state ──────────────────────────────────────────────────────
 
 rm -f .claude/ralph-loop.local.md

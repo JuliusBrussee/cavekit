@@ -2,7 +2,7 @@
 name: ck-make
 description: "Implement a build site or plan — automatically parallelizes independent tasks and progresses through tiers autonomously"
 argument-hint: "[FILE] [--filter PATTERN] [--peer-review] [--max-iterations N] [--completion-promise TEXT]"
-allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh:*)", "Bash(${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh:*)", "Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/cavekit-tools.cjs:*)", "Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/cavekit-router.cjs:*)", "Bash(git *)"]
+allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh:*)", "Bash(${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh:*)", "Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/cavekit-tools.cjs:*)", "Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/cavekit-router.cjs:*)", "Bash(cavekit team:*)", "Bash(git *)"]
 ---
 
 **What this does:** Runs the autonomous build loop from the build site — parallelizes ready tasks into coherent work packets, validates each against acceptance criteria, merges after every wave, progresses through tiers until all tasks are done.
@@ -155,14 +155,36 @@ Once the setup script completes (outputs the ralph prompt), you run the executio
    **No subagent is spawned.** The parent session does the work directly. For each packet, in order (one at a time):
 
    1. Read the task entry from the build site, its cavekit requirements, acceptance criteria, and `context/impl/dead-ends.md`.
-   2. If the packet contains UI tasks, read `DESIGN.md` and the `ck:ui-craft` skill.
-   3. Implement the packet: edit files, write tests, run validation (build + tests).
-   4. Commit on the current branch with a message naming the packet's primary task: `T-{ID}: {what was done}`. Do NOT push.
-   5. Log one line in wave status:
+   2. If team mode is initialized (tracked `.cavekit/team/ledger.jsonl` and local `.cavekit/team/identity.json` exist), claim the packet's primary task before doing any work:
+      ```bash
+      cavekit team claim T-XXX --json
+      ```
+      - Exit `0` with `already=true` is fine — continue.
+      - Exit `3`, `4`, `5`, or `6` means the task is unavailable right now; log it as skipped for this wave and move to the next packet.
+      - On a successful fresh claim, immediately start the internal heartbeat loop in the background and capture its PID:
+      ```bash
+      CAVEKIT_INTERNAL=1 cavekit team heartbeat T-XXX >/tmp/cavekit-team-heartbeat-T-XXX.log 2>&1 &
+      TEAM_HEARTBEAT_PID=$!
+      ```
+      - If team mode is absent, skip this entire claim/heartbeat step.
+   3. If the packet contains UI tasks, read `DESIGN.md` and the `ck:ui-craft` skill.
+   4. Implement the packet: edit files, write tests, run validation (build + tests).
+   5. Commit on the current branch with a message naming the packet's primary task: `T-{ID}: {what was done}`. Do NOT push.
+   6. If team mode is active:
+      - On success, stop the heartbeat (`kill "$TEAM_HEARTBEAT_PID"`; if it ignores SIGTERM, wait up to 5s then SIGKILL) and run:
+        ```bash
+        cavekit team release T-XXX --complete
+        ```
+      - On failure or BLOCKED status, stop the heartbeat the same way and run:
+        ```bash
+        cavekit team release T-XXX --note "validation failure"
+        ```
+      - This release/complete step is mandatory in every exit path.
+   7. Log one line in wave status:
       ```
       T-{ID}: {title} — COMPLETE | PARTIAL | BLOCKED. Files: {n}. Build {P/F}, Tests {P/F}.
       ```
-   6. Move to the next packet. No merge, no worktree, no Agent dispatch.
+   8. Move to the next packet. No merge, no worktree, no Agent dispatch.
 
    Inline mode runs under whatever model the parent session is using. It does **not** honor `EXECUTION_MODEL` — if the user needs a specific model for task implementation, they must switch to worktree mode (below) or set the parent session to that model.
 
@@ -175,6 +197,8 @@ Once the setup script completes (outputs the ralph prompt), you run the executio
    **Dispatch rule by `MAX_PARALLEL`:**
    - `MAX_PARALLEL=1` → emit one Agent call, wait for it to return, emit the next (sequential).
    - `MAX_PARALLEL>1` → emit up to `MAX_PARALLEL` Agent calls in a single assistant message (parallel). If the frontier has more packets than `MAX_PARALLEL`, pick the top-N highest-priority packets and defer the rest to the next wave.
+
+   Before dispatching each packet, if team mode is active in the parent checkout, claim the packet's primary task with `cavekit team claim T-XXX --json`. Only dispatch packets whose claim succeeds (or is already held by this checkout). For each successfully claimed packet, start a background `CAVEKIT_INTERNAL=1 cavekit team heartbeat T-XXX` process and capture its PID alongside the packet metadata. If the claim exits `3`, `4`, `5`, or `6`, skip dispatch for that packet this wave.
 
    ```
    Agent(
@@ -228,6 +252,9 @@ Once the setup script completes (outputs the ralph prompt), you run the executio
      2. `git worktree remove <worktree-path>` — remove the worktree directory (required before branch can be deleted)
      3. `git branch -D <branch>` — delete the branch
      Skip all three steps if the subagent reported no changes (Claude Code auto-cleans worktrees with no changes). If a merge conflicts, clean up the worktree (`git worktree remove <worktree-path> --force`) before reporting the conflict.
+     If team mode is active for that packet, stop its heartbeat PID first (SIGTERM, wait up to 5s, then SIGKILL if needed), then:
+     - on successful merge + validation, run `cavekit team release T-XXX --complete`
+     - on failed merge, validation failure, or harness-level BLOCKED result, run `cavekit team release T-XXX --note "<reason>"`
    - **If `TB_ISOLATION=inline`**: no merge or worktree cleanup — the parent session's commits already landed on the current branch. Optionally run `git log --oneline {TIER_START_REF}..HEAD` to confirm the expected task commits are present.
    - Update `context/impl/impl-*.md` with status for each completed task
    - Record any dead ends in `context/impl/dead-ends.md`

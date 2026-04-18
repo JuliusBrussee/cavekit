@@ -121,3 +121,22 @@ func TestFrontierSummary_WithTasks(t *testing.T) {
 		t.Errorf("expected both task IDs in summary, got: %s", result)
 	}
 }
+
+func TestFilterReadyTasks_ExcludesOtherOwners(t *testing.T) {
+	ready := []Task{
+		{ID: "T-001", Title: "One"},
+		{ID: "T-002", Title: "Two"},
+	}
+	active := map[string]ClaimInfo{
+		"T-001": {Owner: "other@example.com", Session: "other"},
+		"T-002": {Owner: "me@example.com", Session: "mine"},
+	}
+
+	filtered, excluded := FilterReadyTasks(ready, active, "me@example.com", "mine", "T-002")
+	if len(filtered) != 1 || filtered[0].ID != "T-002" {
+		t.Fatalf("expected only current owner's active task to remain, got %+v", filtered)
+	}
+	if len(excluded) != 1 || excluded[0] != "T-001" {
+		t.Fatalf("expected T-001 to be excluded, got %+v", excluded)
+	}
+}

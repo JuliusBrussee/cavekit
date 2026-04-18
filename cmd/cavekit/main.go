@@ -28,6 +28,8 @@ func main() {
 		runMonitor()
 	case "status":
 		runStatus()
+	case "team":
+		runTeam()
 	case "kill":
 		runKill()
 	case "version":
@@ -38,7 +40,7 @@ func main() {
 		runReset()
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command: %s\n", cmd)
-		fmt.Fprintln(os.Stderr, "usage: cavekit [monitor|status|kill|version|debug|reset]")
+		fmt.Fprintln(os.Stderr, "usage: cavekit [monitor|status|team|kill|version|debug|reset]")
 		os.Exit(1)
 	}
 }

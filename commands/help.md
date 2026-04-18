@@ -40,6 +40,7 @@ one-shot:    /ck:ship "<describe your feature>"     # runs all four, no gates
 | `/ck:revise` | Trace recent manual fixes back into kits; `--trace` runs the single-failure backprop protocol | After a hotfix or a review finding |
 | `/ck:review` | Branch review — kit compliance + code quality; `--mode gap`, `--codex`, `--tier`, `--strict` narrow the scope | Before merging; as a tier gate inside `/ck:make`; on-demand second opinion |
 | `/ck:status` | Progress report against the build site; `--watch` tails the live dashboard | During or after `/ck:make` |
+| `/ck:team` | Initialize team mode, join a checkout, inspect claims/activity, and manage task ownership | Before multi-user Cavekit work in one repo |
 | `/ck:config` | Show or update execution preset and runtime keys | Any time |
 | `/ck:resume` | Recover an interrupted loop without losing progress | After a crash, lock conflict, or manual interrupt |
 | `/ck:help` | This page | — |
@@ -85,6 +86,12 @@ one-shot:    /ck:ship "<describe your feature>"     # runs all four, no gates
 /ck:status                        # one snapshot
 /ck:status --watch                # tail live dashboard (replaces /ck:watch)
 /ck:status --watch --interval 5
+/ck:status --team                 # active claims + recent team activity
+
+/ck:team init                     # create .cavekit/team scaffolding
+/ck:team join                     # persist local identity for this checkout
+/ck:team claim T-013              # manually claim a task
+/ck:team release T-013 --complete # mark claimed task complete and release it
 
 /ck:init                          # full bootstrap
 /ck:init --tools-only             # re-detect CLI tools, MCP servers, plugins (replaces /ck:setup-tools)

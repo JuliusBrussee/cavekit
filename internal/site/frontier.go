@@ -5,6 +5,12 @@ import (
 	"strings"
 )
 
+// ClaimInfo is the minimal claim state needed to filter a ready frontier.
+type ClaimInfo struct {
+	Owner   string
+	Session string
+}
+
 // ReadyTasks returns all tasks that are ready to execute:
 // not yet done, and all blockedBy dependencies are complete.
 func ReadyTasks(s *Site, completed TaskStatusMap) []Task {
@@ -35,6 +41,34 @@ func ReadyTasks(s *Site, completed TaskStatusMap) []Task {
 		}
 	}
 	return ready
+}
+
+// FilterReadyTasks removes tasks held by other claims from a ready frontier.
+// The current owner's currently active task remains visible.
+func FilterReadyTasks(ready []Task, active map[string]ClaimInfo, currentOwner, currentSession, currentTask string) ([]Task, []string) {
+	if len(active) == 0 {
+		return ready, nil
+	}
+
+	filtered := make([]Task, 0, len(ready))
+	excluded := make([]string, 0)
+	for _, task := range ready {
+		claim, ok := active[task.ID]
+		if !ok {
+			filtered = append(filtered, task)
+			continue
+		}
+		if claim.Owner != "" && claim.Owner != currentOwner {
+			excluded = append(excluded, task.ID)
+			continue
+		}
+		if claim.Owner == currentOwner && claim.Session == currentSession && task.ID == currentTask {
+			filtered = append(filtered, task)
+			continue
+		}
+		excluded = append(excluded, task.ID)
+	}
+	return filtered, excluded
 }
 
 // FrontierSummary returns a human-readable summary of ready tasks.

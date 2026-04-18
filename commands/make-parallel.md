@@ -2,7 +2,7 @@
 name: ck-make-parallel
 description: "Like /ck:make but uses parallel ck:task-builder subagents in isolated git worktrees (opt-in; the safe default is /ck:make)"
 argument-hint: "[FILE] [--filter PATTERN] [--peer-review] [--concurrency N] [--max-iterations N] [--completion-promise TEXT]"
-allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh:*)", "Bash(${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh:*)", "Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/cavekit-tools.cjs:*)", "Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/cavekit-router.cjs:*)", "Bash(git *)"]
+allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-build.sh:*)", "Bash(${CLAUDE_PLUGIN_ROOT}/scripts/bp-config.sh:*)", "Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/cavekit-tools.cjs:*)", "Bash(node ${CLAUDE_PLUGIN_ROOT}/scripts/cavekit-router.cjs:*)", "Bash(cavekit team:*)", "Bash(git *)"]
 ---
 
 **What this does:** Runs the same build loop as `/ck:make`, but overrides the execution mode for this run: `TB_ISOLATION=worktree` and `MAX_PARALLEL=N` (default 3). Task-builder subagents dispatch in parallel inside isolated git worktrees; the parent session merges and cleans up each worktree after the wave.
