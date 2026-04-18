@@ -26,7 +26,10 @@
 </p>
 
 <p align="center">
-  Part of the <a href="https://github.com/JuliusBrussee/caveman">Caveman</a> ecosystem
+  <strong>🪨 Caveman Ecosystem</strong> &nbsp;·&nbsp;
+  <a href="https://github.com/JuliusBrussee/caveman">caveman</a> <em>talk less</em> &nbsp;·&nbsp;
+  <a href="https://github.com/JuliusBrussee/cavemem">cavemem</a> <em>remember more</em> &nbsp;·&nbsp;
+  <strong>cavekit</strong> <em>build better</em> <sub>(you are here)</sub>
 </p>
 
 ---
@@ -504,9 +507,20 @@ If cavekit save you mass debug time — leave star.
 
 ---
 
+## 🪨 The Caveman Ecosystem
+
+Three tools. One philosophy: **agent do more with less**.
+
+| Repo | What | One-liner |
+|------|------|-----------|
+| [**caveman**](https://github.com/JuliusBrussee/caveman) | Output compression skill | *why use many token when few do trick* — ~75% fewer output tokens across Claude Code, Cursor, Gemini, Codex |
+| [**cavemem**](https://github.com/JuliusBrussee/cavemem) | Cross-agent persistent memory | *why agent forget when agent can remember* — compressed SQLite + MCP, local by default |
+| [**cavekit**](https://github.com/JuliusBrussee/cavekit) *(you are here)* | Spec-driven autonomous build loop | *why agent guess when agent can know* — natural language → kits → parallel build → verified |
+
+They compose: **cavekit** orchestrates the build, **caveman** compresses what the agent *says* (bundled, on by default for build/inspect phases), **cavemem** compresses what the agent *remembers* across sessions. Install one, some, or all — each stands alone.
+
 ## Also by Julius Brussee
 
-- **[Caveman](https://github.com/JuliusBrussee/caveman)** — Claude Code skill that cuts ~75% of output tokens. Bundled in Cavekit, enabled by default for build/inspect phases. Standalone install: `npx skills add JuliusBrussee/caveman`
 - **[Revu](https://github.com/JuliusBrussee/revu-swift)** — local-first macOS study app with FSRS spaced repetition. [revu.cards](https://revu.cards)
 
 ## License
