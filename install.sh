@@ -54,20 +54,20 @@ cat > "$MARKETPLACE_DIR/.claude-plugin/marketplace.json" <<EOF
   "owner": { "name": "$(whoami)" },
   "metadata": {
     "description": "Local Cavekit plugin marketplace",
-    "version": "2.2.0"
+    "version": "3.0.0"
   },
   "plugins": [
     {
       "name": "ck",
       "description": "Cavekit framework with skills, commands, agents, and references",
-      "version": "2.2.0",
+      "version": "3.0.0",
       "source": "./ck",
       "author": { "name": "$(whoami)" }
     },
     {
       "name": "bp",
       "description": "[DEPRECATED — use /ck:* instead] Cavekit framework (legacy alias)",
-      "version": "2.2.0",
+      "version": "3.0.0",
       "source": "./bp",
       "author": { "name": "$(whoami)" }
     }
@@ -79,7 +79,7 @@ cat > "$MARKETPLACE_DIR/.claude-plugin/plugin.json" <<EOF
 {
   "name": "cavekit-marketplace",
   "description": "Local Cavekit plugin marketplace",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "plugins": ["ck", "bp"]
 }
 EOF
@@ -177,6 +177,7 @@ printf "    /ck:sketch                    Draft kits\n"
 printf "    /ck:map                       Generate build site\n"
 printf "    /ck:make                      Build from kits\n"
 printf "    /ck:check                     Inspect the build\n"
+printf "    /ck:review                    Audit branch end-to-end\n"
 printf "    /ck:status                    Check build progress\n"
 printf "    /ck:ship <feature>            One-shot sketch → map → make → check\n"
 printf "\n"
