@@ -37,6 +37,17 @@ command -v claude &>/dev/null || warn "claude CLI not found. Install Claude Code
 command -v codex &>/dev/null || warn "codex CLI not found. Codex local plugin sync will still be configured."
 command -v tmux &>/dev/null || warn "tmux not found. Install for the parallel launcher: brew install tmux"
 
+# ─── Clean up legacy blueprint/bp install artifacts ────────────────────────
+
+LEGACY_BP_MARKET="$CLAUDE_DIR/plugins/local/blueprint-marketplace"
+LEGACY_BP_CACHE="$CLAUDE_DIR/plugins/cache/blueprint-local"
+
+if [[ -d "$LEGACY_BP_MARKET" || -d "$LEGACY_BP_CACHE" ]]; then
+  info "Removing deprecated blueprint/bp install artifacts..."
+  rm -rf "$LEGACY_BP_MARKET" "$LEGACY_BP_CACHE"
+  ok "Removed legacy blueprint-marketplace and cache"
+fi
+
 # ─── Create marketplace with symlink to repo ─────────────────────────────
 
 info "Setting up Cavekit marketplace..."
@@ -108,12 +119,13 @@ import json, sys
 path, name, mpath = sys.argv[1], sys.argv[2], sys.argv[3]
 with open(path) as f:
     d = json.load(f)
-d.setdefault("extraKnownMarketplaces", {})[name] = {"source": {"source": "directory", "path": mpath}}
+markets = d.setdefault("extraKnownMarketplaces", {})
+markets[name] = {"source": {"source": "directory", "path": mpath}}
+# Remove deprecated blueprint-local marketplace
+markets.pop("blueprint-local", None)
 enabled = d.setdefault("enabledPlugins", {})
 enabled[f"ck@{name}"] = True
-# Remove deprecated bp plugin registration if present
-enabled.pop(f"bp@{name}", None)
-# Also remove from any other marketplace name the user may have registered it under
+# Strip all deprecated bp/blueprint plugin registrations (any marketplace)
 for key in list(enabled.keys()):
     if key.startswith("bp@") or key.startswith("blueprint@"):
         enabled.pop(key, None)
