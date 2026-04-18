@@ -20,6 +20,9 @@ func LoadConfig(root string) (Config, error) {
 	if cfg.FetchIntervalSeconds < 0 {
 		cfg.FetchIntervalSeconds = defaultFetchIntervalSeconds
 	}
+	if cfg.HeartbeatPublishEvery <= 0 {
+		cfg.HeartbeatPublishEvery = defaultHeartbeatPublishEvery
+	}
 	return cfg, nil
 }
 

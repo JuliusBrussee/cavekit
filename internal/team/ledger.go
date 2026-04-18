@@ -90,6 +90,7 @@ func ActiveClaims(events []LedgerEvent, ttl time.Duration, now time.Time) map[st
 		acquiredAt    string
 		lastHeartbeat string
 		leaseUntil    string
+		paths         []string
 		closed        bool
 	}
 
@@ -106,6 +107,7 @@ func ActiveClaims(events []LedgerEvent, ttl time.Duration, now time.Time) map[st
 				acquiredAt:    event.TS,
 				lastHeartbeat: event.TS,
 				leaseUntil:    event.LeaseUntil,
+				paths:         append([]string{}, event.Paths...),
 			}
 		case EventHeartbeat:
 			state := states[key]
@@ -115,6 +117,9 @@ func ActiveClaims(events []LedgerEvent, ttl time.Duration, now time.Time) map[st
 			state.lastHeartbeat = event.TS
 			if event.LeaseUntil != "" {
 				state.leaseUntil = event.LeaseUntil
+			}
+			if len(event.Paths) > 0 {
+				state.paths = append([]string{}, event.Paths...)
 			}
 		case EventRelease, EventComplete:
 			state := states[key]
@@ -144,6 +149,7 @@ func ActiveClaims(events []LedgerEvent, ttl time.Duration, now time.Time) map[st
 			LastHeartbeat: state.lastHeartbeat,
 			LeaseUntil:    state.leaseUntil,
 			Stale:         false,
+			Paths:         state.paths,
 		}
 
 		existing, ok := active[state.task]
@@ -152,6 +158,18 @@ func ActiveClaims(events []LedgerEvent, ttl time.Duration, now time.Time) map[st
 		}
 	}
 	return active
+}
+
+// AllActiveClaims returns a slice of every currently-active claim — including
+// multiple claims on different tasks owned by different sessions. Used for
+// path-overlap detection (the map form only keys by task).
+func AllActiveClaims(events []LedgerEvent, ttl time.Duration, now time.Time) []ActiveClaim {
+	m := ActiveClaims(events, ttl, now)
+	out := make([]ActiveClaim, 0, len(m))
+	for _, c := range m {
+		out = append(out, c)
+	}
+	return out
 }
 
 func CompletedTasks(events []LedgerEvent) map[string]bool {

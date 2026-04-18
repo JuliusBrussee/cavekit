@@ -58,7 +58,7 @@ func TestEnsureGitattributesBlock_WarnsOnConflict(t *testing.T) {
 	if !strings.Contains(text, ".cavekit/team/ledger.jsonl merge=ours") {
 		t.Fatalf("expected original conflicting entry to remain:\n%s", text)
 	}
-	if !strings.Contains(text, ".cavekit/team/ledger.jsonl merge=union") {
-		t.Fatalf("expected managed union entry to be added:\n%s", text)
+	if !strings.Contains(text, "refs/heads/cavekit/team") {
+		t.Fatalf("expected managed block to reference the ledger ref:\n%s", text)
 	}
 }

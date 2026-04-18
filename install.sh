@@ -34,7 +34,7 @@ printf "${B}Installer${R}\n\n"
 
 command -v git &>/dev/null || fail "git not found."
 command -v claude &>/dev/null || warn "claude CLI not found. Install Claude Code to use /ck:... commands."
-command -v codex &>/dev/null || warn "codex CLI not found. Codex local plugin sync will still be configured."
+command -v codex &>/dev/null || warn "codex CLI not found. Codex bundle links will still be configured."
 command -v tmux &>/dev/null || warn "tmux not found. Install for the parallel launcher: brew install tmux"
 
 # ─── Clean up legacy blueprint/bp install artifacts ────────────────────────
@@ -147,7 +147,7 @@ fi
 
 # ─── Sync Codex local plugin ────────────────────────────────────────────────
 
-info "Configuring Codex local plugin..."
+info "Configuring Codex bundle..."
 
 chmod +x "$INSTALL_DIR/scripts/sync-codex-plugin.sh"
 "$INSTALL_DIR/scripts/sync-codex-plugin.sh"
@@ -195,7 +195,7 @@ printf "    /ck:status                    Check build progress\n"
 printf "    /ck:ship <feature>            One-shot sketch → map → make → check\n"
 printf "\n"
 printf "  ${B}Codex:${R}\n"
-printf "    Synced local plugin via ~/plugins/ck and ~/.agents/plugins/marketplace.json\n"
+printf "    Linked local bundle via ~/plugins/ck and ~/.agents/plugins/marketplace.json\n"
 printf "    Linked prompts into ~/.codex/prompts (for /prompts:ck-... commands)\n"
 printf "\n"
 printf "  Restart Claude Code and Codex to load the plugin changes.\n\n"

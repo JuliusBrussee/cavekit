@@ -8,11 +8,18 @@ import (
 	"strings"
 )
 
+// EnsureGitignoreBlock ensures the managed block ignores every piece of the
+// team state that is per-checkout (identity, leases, local cache, outbox, head
+// pointer). Since the ledger now lives on its own ref branch, no team state is
+// ever committed to the working branch.
 func EnsureGitignoreBlock(root string, force bool) error {
 	block := []string{
 		managedBlockStart,
 		".cavekit/team/leases/",
 		".cavekit/team/identity.json",
+		".cavekit/team/ledger.jsonl",
+		".cavekit/team/ledger.head",
+		".cavekit/team/outbox.jsonl",
 		managedBlockEnd,
 	}
 	updated, err := upsertManagedBlock(filepath.Join(root, ".gitignore"), block, force)
@@ -22,12 +29,16 @@ func EnsureGitignoreBlock(root string, force bool) error {
 	return atomicWrite(filepath.Join(root, ".gitignore"), []byte(updated))
 }
 
+// EnsureGitattributesBlock used to install `merge=union` for the ledger. That
+// is no longer required because the ledger isn't tracked on the working
+// branch. The block is rewritten to empty so legacy installs drop the
+// attribute cleanly. We still scan for stale entries and warn.
 func EnsureGitattributesBlock(root string, force bool) ([]string, error) {
 	path := filepath.Join(root, ".gitattributes")
 	warnings := findConflictingAttributes(path)
 	block := []string{
 		managedBlockStart,
-		".cavekit/team/ledger.jsonl merge=union",
+		"# cavekit team ledger is tracked via refs/heads/cavekit/team, not main",
 		managedBlockEnd,
 	}
 	updated, err := upsertManagedBlock(path, block, force)

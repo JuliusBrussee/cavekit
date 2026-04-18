@@ -155,18 +155,24 @@ Once the setup script completes (outputs the ralph prompt), you run the executio
    **No subagent is spawned.** The parent session does the work directly. For each packet, in order (one at a time):
 
    1. Read the task entry from the build site, its cavekit requirements, acceptance criteria, and `context/impl/dead-ends.md`.
-   2. If team mode is initialized (tracked `.cavekit/team/ledger.jsonl` and local `.cavekit/team/identity.json` exist), claim the packet's primary task before doing any work:
+   2. If team mode is initialized (the local `.cavekit/team/identity.json` exists), **prefer `cavekit team next`** to pick a packet whose file footprint doesn't conflict with active teammate claims, then claim it with the packet's file scope:
       ```bash
-      cavekit team claim T-XXX --json
+      # Suggest a non-conflicting task; falls back to an unblocked frontier task.
+      cavekit team next --json
+
+      # Claim with a path scope so teammates working on unrelated subsystems are not blocked.
+      cavekit team claim T-XXX --paths "src/<module>/**,tests/<module>/**" --json
       ```
       - Exit `0` with `already=true` is fine — continue.
       - Exit `3`, `4`, `5`, or `6` means the task is unavailable right now; log it as skipped for this wave and move to the next packet.
+      - If `provisional=true` in the JSON, the claim was queued in the outbox (offline). You can still proceed; `team sync` or the next successful op will publish.
       - On a successful fresh claim, immediately start the internal heartbeat loop in the background and capture its PID:
       ```bash
       CAVEKIT_INTERNAL=1 cavekit team heartbeat T-XXX >/tmp/cavekit-team-heartbeat-T-XXX.log 2>&1 &
       TEAM_HEARTBEAT_PID=$!
       ```
       - If team mode is absent, skip this entire claim/heartbeat step.
+      - The pre-commit guard (installed by `team init`) will block a commit that touches files claimed by another teammate — if that happens, either `cavekit team next` to switch tasks, coordinate a handoff, or set `CAVEKIT_TEAM_OVERRIDE=1` for an emergency pass (records an override event in the ledger).
    3. If the packet contains UI tasks, read `DESIGN.md` and the `ck:ui-craft` skill.
    4. Implement the packet: edit files, write tests, run validation (build + tests).
    5. Commit on the current branch with a message naming the packet's primary task: `T-{ID}: {what was done}`. Do NOT push.
@@ -198,7 +204,11 @@ Once the setup script completes (outputs the ralph prompt), you run the executio
    - `MAX_PARALLEL=1` → emit one Agent call, wait for it to return, emit the next (sequential).
    - `MAX_PARALLEL>1` → emit up to `MAX_PARALLEL` Agent calls in a single assistant message (parallel). If the frontier has more packets than `MAX_PARALLEL`, pick the top-N highest-priority packets and defer the rest to the next wave.
 
-   Before dispatching each packet, if team mode is active in the parent checkout, claim the packet's primary task with `cavekit team claim T-XXX --json`. Only dispatch packets whose claim succeeds (or is already held by this checkout). For each successfully claimed packet, start a background `CAVEKIT_INTERNAL=1 cavekit team heartbeat T-XXX` process and capture its PID alongside the packet metadata. If the claim exits `3`, `4`, `5`, or `6`, skip dispatch for that packet this wave.
+   Before dispatching each packet, if team mode is active in the parent checkout:
+   - Prefer `cavekit team next --json` to choose a packet that doesn't overlap active teammate paths.
+   - Claim it with its expected file footprint: `cavekit team claim T-XXX --paths "src/<module>/**" --json`.
+   - Only dispatch packets whose claim succeeds (or is already held by this checkout). For each successfully claimed packet, start a background `CAVEKIT_INTERNAL=1 cavekit team heartbeat T-XXX` process and capture its PID alongside the packet metadata. If the claim exits `3`, `4`, `5`, or `6`, skip dispatch for that packet this wave.
+   - The ledger lives on `refs/heads/cavekit/team`, not the working branch — so team events never pollute your feature-branch diff.
 
    ```
    Agent(

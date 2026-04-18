@@ -11,16 +11,19 @@ import (
 var taskIDPattern = regexp.MustCompile(`^T-([A-Za-z0-9]+-)*[A-Za-z0-9]+$`)
 
 type Config struct {
-	LeaseTTLSeconds         int `json:"lease_ttl_seconds"`
-	HeartbeatIntervalSeconds int `json:"heartbeat_interval_seconds"`
-	FetchIntervalSeconds    int `json:"fetch_interval_seconds,omitempty"`
+	LeaseTTLSeconds          int  `json:"lease_ttl_seconds"`
+	HeartbeatIntervalSeconds int  `json:"heartbeat_interval_seconds"`
+	FetchIntervalSeconds     int  `json:"fetch_interval_seconds,omitempty"`
+	HeartbeatPublishEvery    int  `json:"heartbeat_publish_every"`
+	AllowOffline             bool `json:"allow_offline"`
 }
 
 func DefaultConfig() Config {
 	return Config{
-		LeaseTTLSeconds:         defaultLeaseTTLSeconds,
+		LeaseTTLSeconds:          defaultLeaseTTLSeconds,
 		HeartbeatIntervalSeconds: defaultHeartbeatIntervalSeconds,
-		FetchIntervalSeconds:    defaultFetchIntervalSeconds,
+		FetchIntervalSeconds:     defaultFetchIntervalSeconds,
+		HeartbeatPublishEvery:    defaultHeartbeatPublishEvery,
 	}
 }
 
@@ -32,13 +35,14 @@ type Identity struct {
 }
 
 type Lease struct {
-	Owner       string `json:"owner"`
-	Host        string `json:"host"`
-	PID         int    `json:"pid"`
-	Session     string `json:"session"`
-	AcquiredAt  string `json:"acquired_at"`
-	HeartbeatAt string `json:"heartbeat_at"`
-	ExpiresAt   string `json:"expires_at"`
+	Owner       string   `json:"owner"`
+	Host        string   `json:"host"`
+	PID         int      `json:"pid"`
+	Session     string   `json:"session"`
+	AcquiredAt  string   `json:"acquired_at"`
+	HeartbeatAt string   `json:"heartbeat_at"`
+	ExpiresAt   string   `json:"expires_at"`
+	Paths       []string `json:"paths,omitempty"`
 }
 
 type EventType string
@@ -60,19 +64,22 @@ type LedgerEvent struct {
 	Session    string    `json:"session"`
 	LeaseUntil string    `json:"lease_until,omitempty"`
 	Note       string    `json:"note,omitempty"`
+	Paths      []string  `json:"paths,omitempty"`
 
 	line int
 }
 
 type ActiveClaim struct {
-	Task          string `json:"task"`
-	Owner         string `json:"owner"`
-	Host          string `json:"host"`
-	Session       string `json:"session"`
-	AcquiredAt    string `json:"acquired_at"`
-	LastHeartbeat string `json:"last_heartbeat,omitempty"`
-	LeaseUntil    string `json:"lease_until,omitempty"`
-	Stale         bool   `json:"stale"`
+	Task          string   `json:"task"`
+	Owner         string   `json:"owner"`
+	Host          string   `json:"host"`
+	Session       string   `json:"session"`
+	AcquiredAt    string   `json:"acquired_at"`
+	LastHeartbeat string   `json:"last_heartbeat,omitempty"`
+	LeaseUntil    string   `json:"lease_until,omitempty"`
+	Stale         bool     `json:"stale"`
+	Paths         []string `json:"paths,omitempty"`
+	Provisional   bool     `json:"provisional,omitempty"`
 }
 
 type RosterMember struct {

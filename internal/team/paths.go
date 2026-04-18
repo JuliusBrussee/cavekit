@@ -13,9 +13,10 @@ const (
 	managedBlockStart = "# >>> cavekit-team"
 	managedBlockEnd   = "# <<< cavekit-team"
 
-	defaultLeaseTTLSeconds         = 10 * 60
+	defaultLeaseTTLSeconds          = 30 * 60
 	defaultHeartbeatIntervalSeconds = 60
-	defaultFetchIntervalSeconds    = 30
+	defaultFetchIntervalSeconds     = 30
+	defaultHeartbeatPublishEvery    = 3
 )
 
 func TeamDir(root string) string {

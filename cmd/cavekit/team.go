@@ -43,6 +43,10 @@ func runTeam() {
 		runTeamRelease(ctx, manager, os.Args[3:])
 	case "sync":
 		runTeamSync(ctx, manager, os.Args[3:])
+	case "next":
+		runTeamNext(ctx, manager, os.Args[3:])
+	case "guard-commit":
+		runTeamGuardCommit(ctx, manager)
 	case "heartbeat":
 		if os.Getenv("CAVEKIT_INTERNAL") == "" {
 			fmt.Fprintln(os.Stderr, "unknown team subcommand: heartbeat")
@@ -84,6 +88,12 @@ func runTeamInit(ctx context.Context, manager *team.Manager, args []string) {
 	if result.RosterCreated {
 		fmt.Printf("created roster: %s\n", team.RosterPath(manager.Root))
 	}
+	if result.RefReady {
+		fmt.Printf("ledger ref: %s (ready)\n", team.TeamRef)
+	} else {
+		fmt.Printf("ledger ref: %s (deferred — push on next online op)\n", team.TeamRef)
+	}
+	fmt.Println("pre-commit guard installed at .git/hooks/pre-commit")
 }
 
 func runTeamJoin(ctx context.Context, manager *team.Manager, args []string) {
@@ -123,6 +133,7 @@ func runTeamStatus(manager *team.Manager, args []string) {
 	fs.SetOutput(os.Stderr)
 	taskID := fs.String("task", "", "restrict output to one task")
 	user := fs.String("user", "", "restrict output to one teammate email")
+	conflicts := fs.Bool("conflicts", false, "include recent conflict/race events and provisional claims")
 	jsonOut := fs.Bool("json", false, "print JSON only")
 	if err := fs.Parse(args); err != nil {
 		os.Exit(2)
@@ -134,27 +145,38 @@ func runTeamStatus(manager *team.Manager, args []string) {
 	}
 	report, err := team.BuildStatusReport(manager.Root, identity, strings.TrimSpace(*taskID), strings.TrimSpace(*user), os.Stderr)
 	exitIfTeamErr(err)
+	if *conflicts {
+		report.Conflicts = team.CollectConflicts(manager.Root, os.Stderr)
+		report.OutboxPending = team.OutboxPendingCount(manager.Root)
+	}
 	if *jsonOut {
 		writeJSONResult(report)
 		return
 	}
 	fmt.Print(team.FormatStatusReport(report))
+	if *conflicts {
+		fmt.Print(team.FormatConflicts(report))
+	}
 }
 
 func runTeamClaim(ctx context.Context, manager *team.Manager, args []string) {
-	args = normalizeFlagArgs(args, nil)
+	args = normalizeFlagArgs(args, map[string]bool{
+		"--paths": true,
+	})
 	fs := flag.NewFlagSet("team claim", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
+	paths := fs.String("paths", "", "comma-separated file globs this claim owns (e.g. 'src/auth/**,tests/auth/**')")
 	jsonOut := fs.Bool("json", false, "print JSON only")
 	if err := fs.Parse(args); err != nil {
 		os.Exit(2)
 	}
 	if fs.NArg() != 1 {
-		fmt.Fprintln(os.Stderr, "usage: cavekit team claim <task-id> [--json]")
+		fmt.Fprintln(os.Stderr, "usage: cavekit team claim <task-id> [--paths GLOBS] [--json]")
 		os.Exit(2)
 	}
 
-	result, err := manager.Claim(ctx, strings.TrimSpace(fs.Arg(0)))
+	pathList := splitCSV(*paths)
+	result, err := manager.Claim(ctx, strings.TrimSpace(fs.Arg(0)), pathList)
 	exitIfTeamErr(err)
 	if *jsonOut {
 		writeJSONResult(result)
@@ -164,9 +186,16 @@ func runTeamClaim(ctx context.Context, manager *team.Manager, args []string) {
 		fmt.Printf("already claimed: %s\n", result.Task)
 		return
 	}
-	fmt.Printf("claimed %s\n", result.Task)
+	fmt.Printf("claimed %s", result.Task)
+	if len(result.Paths) > 0 {
+		fmt.Printf(" (paths: %s)", strings.Join(result.Paths, ", "))
+	}
+	fmt.Println()
+	if result.Provisional {
+		fmt.Println("provisional: queued in outbox (offline); will publish on next successful op")
+	}
 	if result.CommitSHA != "" {
-		fmt.Printf("commit: %s\n", result.CommitSHA)
+		fmt.Printf("ledger: %s\n", result.CommitSHA)
 	}
 }
 
@@ -202,8 +231,11 @@ func runTeamRelease(ctx context.Context, manager *team.Manager, args []string) {
 		action = "completed"
 	}
 	fmt.Printf("%s %s\n", action, result.Task)
+	if result.Provisional {
+		fmt.Println("provisional: queued in outbox")
+	}
 	if result.CommitSHA != "" {
-		fmt.Printf("commit: %s\n", result.CommitSHA)
+		fmt.Printf("ledger: %s\n", result.CommitSHA)
 	}
 }
 
@@ -225,7 +257,62 @@ func runTeamSync(ctx context.Context, manager *team.Manager, args []string) {
 		writeJSONResult(result)
 		return
 	}
-	fmt.Printf("fetched team state (%d events)\n", result.EventCount)
+	fmt.Printf("fetched team state (%d events", result.EventCount)
+	if result.OutboxPending > 0 {
+		fmt.Printf(", %d queued offline", result.OutboxPending)
+	}
+	fmt.Println(")")
+}
+
+func runTeamNext(ctx context.Context, manager *team.Manager, args []string) {
+	_ = ctx
+	args = normalizeFlagArgs(args, nil)
+	fs := flag.NewFlagSet("team next", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	jsonOut := fs.Bool("json", false, "print JSON only")
+	_ = fs.Parse(args)
+
+	identity, err := team.ReadIdentity(manager.Root)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "cavekit team next requires `team join` first")
+		os.Exit(1)
+	}
+	suggestion, err := team.NextTask(manager.Root, identity, os.Stderr)
+	exitIfTeamErr(err)
+	if *jsonOut {
+		writeJSONResult(suggestion)
+		return
+	}
+	if suggestion.Task == nil {
+		fmt.Println("no unclaimed frontier task available for you right now")
+		if len(suggestion.SkippedBy) > 0 {
+			fmt.Println("blocked candidates:")
+			for id, reason := range suggestion.SkippedBy {
+				fmt.Printf("  %s — %s\n", id, reason)
+			}
+		}
+		return
+	}
+	fmt.Printf("next: %s — %s (tier %d)\n", suggestion.Task.ID, suggestion.Task.Title, suggestion.Task.Tier)
+	if len(suggestion.Alternatives) > 0 {
+		fmt.Println("alternatives:")
+		for i, alt := range suggestion.Alternatives {
+			if i >= 3 {
+				break
+			}
+			fmt.Printf("  %s — %s\n", alt.ID, alt.Title)
+		}
+	}
+}
+
+func runTeamGuardCommit(ctx context.Context, manager *team.Manager) {
+	if err := team.GuardCommit(ctx, manager.Root, exec.NewRealExecutor(), os.Stderr); err != nil {
+		if exitErr, ok := err.(*team.ExitError); ok {
+			os.Exit(exitErr.Code)
+		}
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
 
 func runTeamHeartbeat(ctx context.Context, manager *team.Manager, args []string) {
@@ -248,18 +335,36 @@ func runTeamHeartbeat(ctx context.Context, manager *team.Manager, args []string)
 	exitIfTeamErr(err)
 }
 
+func splitCSV(s string) []string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
 func teamUsage(showHidden bool) string {
 	var b strings.Builder
 	b.WriteString("usage: cavekit team <subcommand> [flags]\n\n")
 	b.WriteString("subcommands:\n")
-	b.WriteString("  init      initialize team scaffolding, identity, and git hygiene\n")
-	b.WriteString("  join      resolve and persist local identity for an initialized team\n")
-	b.WriteString("  status    show active claims, recent activity, and idle members\n")
-	b.WriteString("  claim     claim one frontier task for the local identity\n")
-	b.WriteString("  release   release or complete a claimed task\n")
-	b.WriteString("  sync      git fetch and re-read the shared team ledger\n")
+	b.WriteString("  init          initialize team scaffolding, identity, ledger ref, and pre-commit guard\n")
+	b.WriteString("  join          resolve and persist local identity for an initialized team\n")
+	b.WriteString("  status        show active claims, recent activity, and idle members\n")
+	b.WriteString("  claim         claim one frontier task for the local identity (optional --paths)\n")
+	b.WriteString("  release       release or complete a claimed task\n")
+	b.WriteString("  sync          fetch the team ledger ref and refresh the local cache\n")
+	b.WriteString("  next          suggest the best unclaimed frontier task for you\n")
+	b.WriteString("  guard-commit  (invoked by pre-commit hook) block commits that touch others' claims\n")
 	if showHidden && os.Getenv("CAVEKIT_INTERNAL") != "" {
-		b.WriteString("  heartbeat internal lease refresh loop used by /ck:make\n")
+		b.WriteString("  heartbeat     internal lease refresh loop used by /ck:make\n")
 	}
 	return b.String()
 }

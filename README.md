@@ -34,7 +34,7 @@
 
 ---
 
-A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin that turns natural language into **specs**, specs into **parallel build plans**, and build plans into **working software** — with an autonomous loop, validation gates, and optional cross-model review.
+A Cavekit bundle for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [Codex](https://developers.openai.com/codex/skills) that turns natural language into **specs**, specs into **parallel build plans**, and build plans into **working software** — with an autonomous loop, validation gates, and optional cross-model review.
 
 You describe what you want. Cavekit writes the contract. Agents build from the contract. Every line of code traces to a requirement. Every requirement has acceptance criteria.
 
@@ -66,7 +66,13 @@ git clone https://github.com/JuliusBrussee/cavekit.git ~/.cavekit
 cd ~/.cavekit && ./install.sh
 ```
 
-Registers the plugin with Claude Code, syncs into the Codex marketplace, installs the `cavekit` CLI. Restart Claude Code after installing.
+Configures Cavekit for Claude Code, links the Codex bundle, and installs the `cavekit` CLI. Restart Claude Code and Codex after installing.
+
+### Agent Surfaces
+
+- **Claude Code**: Cavekit is consumed primarily as slash commands and subagents. Anthropic's public docs describe project and user commands under `.claude/commands/` and subagents under `.claude/agents/`.
+- **Codex**: Cavekit is consumed as Codex skills and plugin-bundled assets. OpenAI's docs describe skills as `SKILL.md`-based workflows, with plugins as the installable distribution unit.
+- Cavekit ships both surfaces so the same methodology can be used from Claude Code and Codex, but they are **not** the same extension mechanism under the hood.
 
 **Requires:** [Claude Code](https://docs.anthropic.com/en/docs/claude-code), git, macOS/Linux.
 

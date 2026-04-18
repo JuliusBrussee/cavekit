@@ -35,6 +35,75 @@ type StatusReport struct {
 	ActiveClaims     []ActiveClaimRow `json:"active_claims"`
 	RecentActivity   []ActivityRow    `json:"recent_activity"`
 	IdleMembers      []string         `json:"idle_members"`
+	Conflicts        []ConflictRow    `json:"conflicts,omitempty"`
+	OutboxPending    int              `json:"outbox_pending,omitempty"`
+}
+
+// ConflictRow summarizes a recent race or override for operator awareness.
+// Surfaced by `team status --conflicts`.
+type ConflictRow struct {
+	RelativeTime string `json:"relative_time"`
+	Type         string `json:"type"` // cas-lost, path-override, stolen-stale, rollback
+	Owner        string `json:"owner"`
+	Task         string `json:"task"`
+	Note         string `json:"note"`
+}
+
+// CollectConflicts scans the ledger for recent non-standard events: rollbacks,
+// stolen stale leases, commit-guard overrides, and notes containing "race".
+// The caller decides whether to include these in status output.
+func CollectConflicts(root string, stderr io.Writer) []ConflictRow {
+	events, err := ReadLedger(root, stderr)
+	if err != nil {
+		return nil
+	}
+	rows := make([]ConflictRow, 0, 8)
+	now := time.Now().UTC()
+	for i := len(events) - 1; i >= 0 && len(rows) < 15; i-- {
+		e := events[i]
+		note := strings.ToLower(e.Note)
+		typ := ""
+		switch {
+		case e.Type == EventNote && strings.Contains(note, "commit-guard override"):
+			typ = "path-override"
+		case strings.Contains(note, "rolled back"):
+			typ = "rollback"
+		case strings.Contains(note, "cas-lost") || strings.Contains(note, "lost claim race"):
+			typ = "cas-lost"
+		case strings.Contains(note, "stolen stale"):
+			typ = "stolen-stale"
+		}
+		if typ == "" {
+			continue
+		}
+		rows = append(rows, ConflictRow{
+			RelativeTime: relativeTime(now, parseEventTime(e.TS)),
+			Type:         typ,
+			Owner:        e.Owner,
+			Task:         e.Task,
+			Note:         e.Note,
+		})
+	}
+	return rows
+}
+
+// FormatConflicts renders the conflict tail + outbox summary as plain text.
+func FormatConflicts(report StatusReport) string {
+	var b strings.Builder
+	b.WriteString("\nConflicts & Races\n")
+	if len(report.Conflicts) == 0 {
+		b.WriteString("—\n")
+	} else {
+		b.WriteString("time | type | owner | task | note\n")
+		for _, row := range report.Conflicts {
+			fmt.Fprintf(&b, "%s | %s | %s | %s | %s\n",
+				row.RelativeTime, row.Type, row.Owner, row.Task, row.Note)
+		}
+	}
+	if report.OutboxPending > 0 {
+		fmt.Fprintf(&b, "\nOutbox: %d provisional event(s) queued offline\n", report.OutboxPending)
+	}
+	return b.String()
 }
 
 func BuildStatusReport(root string, identity *Identity, taskFilter, userFilter string, stderr io.Writer) (StatusReport, error) {
