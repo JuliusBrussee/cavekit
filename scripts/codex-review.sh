@@ -21,6 +21,9 @@ else
   bp_config_get() { echo "${2:-}"; }
 fi
 
+# Note: custom review prompts were used with the old `codex --approval-mode`
+# invocation. The current `codex review --base` subcommand uses its own
+# built-in review logic. The prompt builder is kept for `codex exec` fallback.
 _bp_build_review_prompt() {
   local caveman_active="false"
   if type bp_config_caveman_active &>/dev/null; then
@@ -33,8 +36,6 @@ _bp_build_review_prompt() {
     echo 'You are a senior engineer performing adversarial code review. Review the following diff for bugs, security issues, logic errors, and spec violations. For each finding output exactly one row in a markdown table with columns: Severity, File, Line, Description. Severity must be one of P0 (critical), P1 (high), P2 (medium), P3 (low). If no issues found, output exactly the word NO_FINDINGS on its own line and nothing else.'
   fi
 }
-
-REVIEW_PROMPT="$(_bp_build_review_prompt)"
 
 # ── Main entry point ───────────────────────────────────────────────────
 
@@ -82,38 +83,58 @@ bp_codex_review() {
   diff_lines="$(echo "$diff" | wc -l | tr -d ' ')"
   echo "[ck:review] Diff is ${diff_lines} lines. Sending to Codex..."
 
-  # Build Codex invocation
-  local model
-  model="$(bp_config_get codex_model o4-mini)"
-
-  local codex_cmd=(codex --approval-mode full-auto --model "$model" --quiet -p "$REVIEW_PROMPT")
+  # Build Codex invocation — uses native `codex review` subcommand.
+  # `codex review --base` handles diffing internally and uses its own
+  # review prompt. Model comes from Codex config (~/.codex/config.toml),
+  # not forced here — avoids model-availability errors across accounts.
+  local codex_cmd=(codex review --base "$base_ref")
 
   if [[ "${BP_CODEX_DRY_RUN:-}" == "1" ]]; then
-    echo "[ck:review] DRY RUN — would execute: ${codex_cmd[*]} <<< <diff>"
+    echo "[ck:review] DRY RUN — would execute: ${codex_cmd[*]}"
     return 0
   fi
 
   local raw_output
-  raw_output="$(echo "$diff" | "${codex_cmd[@]}" 2>&1)" || {
+  raw_output="$("${codex_cmd[@]}" 2>&1)" || {
     echo "[ck:review] Codex invocation failed. Falling back to inspector-only review."
     echo "[ck:review] Error: ${raw_output:0:500}"
     return 0
   }
 
-  # Parse output
-  if echo "$raw_output" | grep -qi 'NO_FINDINGS'; then
+  # Extract the review body from the Codex session transcript.
+  # `codex review` outputs a full session log: header, tool calls (skill loading),
+  # then the actual review as the final assistant ("codex") turn. We want only
+  # the review body — everything after the last "codex\n" marker that follows
+  # tool output, skipping the session preamble and skill-loading noise.
+  local review_body
+  review_body="$(_extract_codex_review_body "$raw_output")"
+
+  if [[ -z "$review_body" ]]; then
+    # Fallback: couldn't parse transcript structure, use full output
+    review_body="$raw_output"
+  fi
+
+  # Check for clean review
+  if echo "$review_body" | grep -qiE 'NO_FINDINGS|no issues|LGTM|looks good|no bugs|no problems'; then
     echo "[ck:review] Codex found no issues. Clean review."
     return 0
   fi
 
   echo "[ck:review] Parsing Codex findings..."
 
+  # Try legacy table format first (P0-P3 severity rows)
   local findings
-  findings="$(_parse_codex_findings "$raw_output")"
+  findings="$(_parse_codex_findings "$review_body")"
 
   if [[ -z "$findings" ]]; then
-    echo "[ck:review] Could not parse findings from Codex output."
-    echo "[ck:review] Raw (first 1000 chars): ${raw_output:0:1000}"
+    # Native codex review format — store full review body
+    echo "[ck:review] Native review format detected. Storing findings."
+    _append_raw_review "$review_body"
+    echo ""
+    echo "[ck:review] === Codex Review Output ==="
+    echo "$review_body"
+    echo "[ck:review] === End of Review ==="
+    echo "[ck:review] Findings appended to $FINDINGS_FILE"
     return 0
   fi
 
@@ -211,6 +232,59 @@ _next_finding_number() {
   else
     echo 1
   fi
+}
+
+_extract_codex_review_body() {
+  # Codex session transcript format (simplified):
+  #   <header block>
+  #   user
+  #   <user message>
+  #   exec
+  #   <tool call + output>
+  #   codex              ← the assistant's review response starts here
+  #   <actual review>
+  #
+  # We want everything after the LAST "^codex$" line, which is the
+  # final assistant turn containing the actual review findings.
+  local raw="$1"
+
+  # Find the last occurrence of a line that is exactly "codex"
+  # (the assistant turn marker in the transcript)
+  local last_codex_line
+  last_codex_line="$(echo "$raw" | grep -n '^codex$' | tail -1 | cut -d: -f1)"
+
+  if [[ -z "$last_codex_line" ]]; then
+    # No "codex" turn marker found — can't parse transcript
+    echo ""
+    return
+  fi
+
+  # Extract everything after that line
+  echo "$raw" | tail -n +"$((last_codex_line + 1))"
+}
+
+_append_raw_review() {
+  local raw="$1"
+  mkdir -p "$(dirname "$FINDINGS_FILE")"
+
+  if [[ ! -f "$FINDINGS_FILE" ]]; then
+    cat > "$FINDINGS_FILE" << 'HEADER'
+# Review Findings
+
+| Finding | Severity | File | Status | Task |
+|---------|----------|------|--------|------|
+HEADER
+  fi
+
+  # Append native review output as a fenced block (no truncation)
+  {
+    echo ""
+    echo "### Codex Native Review — $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+    echo ""
+    echo '```'
+    echo "$raw"
+    echo '```'
+  } >> "$FINDINGS_FILE"
 }
 
 _append_findings_to_file() {
