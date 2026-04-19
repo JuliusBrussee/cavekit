@@ -10,6 +10,10 @@ set -euo pipefail
 INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 SETTINGS_FILE="$CLAUDE_DIR/settings.json"
+OPENCODE_DIR="$HOME/.config/opencode"
+OPENCODE_COMMANDS_DIR="$OPENCODE_DIR/commands"
+OPENCODE_USER_STATE_DIR="$HOME/.opencode"
+LOCAL_BIN_DIR="$HOME/.local/bin"
 BIN_DIR="/usr/local/bin"
 MARKETPLACE_NAME="cavekit-local"
 MARKETPLACE_DIR="$CLAUDE_DIR/plugins/local/cavekit-marketplace"
@@ -152,6 +156,38 @@ info "Configuring Codex bundle..."
 chmod +x "$INSTALL_DIR/scripts/sync-codex-plugin.sh"
 "$INSTALL_DIR/scripts/sync-codex-plugin.sh"
 
+# ─── Sync OpenCode commands ─────────────────────────────────────────────────
+
+if [[ -d "$OPENCODE_DIR" || -d "$OPENCODE_USER_STATE_DIR" ]] || command -v opencode &>/dev/null; then
+  info "Configuring OpenCode commands..."
+  mkdir -p "$OPENCODE_COMMANDS_DIR"
+
+  for command_file in "$INSTALL_DIR"/opencode/commands/*.md; do
+    command_name="$(basename "$command_file")"
+    ln -sfn "$command_file" "$OPENCODE_COMMANDS_DIR/$command_name"
+  done
+
+  for command_path in "$OPENCODE_COMMANDS_DIR"/ck-*.md; do
+    [[ -L "$command_path" ]] || continue
+    target_path="$(readlink "$command_path" || true)"
+    [[ "$target_path" == "$INSTALL_DIR/opencode/commands/"* ]] || continue
+    [[ -e "$target_path" ]] || rm -f "$command_path"
+  done
+
+  if [[ -f "$INSTALL_DIR/opencode/AGENTS.md" ]]; then
+    if [[ ! -e "$OPENCODE_DIR/AGENTS.md" ]]; then
+      cp "$INSTALL_DIR/opencode/AGENTS.md" "$OPENCODE_DIR/AGENTS.md"
+      ok "Copied OpenCode AGENTS template to $OPENCODE_DIR/AGENTS.md"
+    else
+      warn "Leaving existing OpenCode AGENTS.md unchanged at $OPENCODE_DIR/AGENTS.md"
+    fi
+  fi
+
+  ok "Linked OpenCode commands at $OPENCODE_COMMANDS_DIR"
+else
+  warn "OpenCode not detected. Skipping OpenCode command install."
+fi
+
 # ─── Install cavekit CLI ─────────────────────────────────────────────────
 
 info "Installing cavekit command..."
@@ -182,6 +218,12 @@ fi
 if [[ -w "$BIN_DIR" ]]; then
   ln -sf "$INSTALL_DIR/scripts/cavekit" "$BIN_DIR/cavekit"
   ok "Installed cavekit to $BIN_DIR/cavekit"
+elif mkdir -p "$LOCAL_BIN_DIR" && [[ -w "$LOCAL_BIN_DIR" ]]; then
+  ln -sf "$INSTALL_DIR/scripts/cavekit" "$LOCAL_BIN_DIR/cavekit"
+  ok "Installed cavekit to $LOCAL_BIN_DIR/cavekit"
+  if [[ ":$PATH:" != *":$LOCAL_BIN_DIR:"* ]]; then
+    warn "$LOCAL_BIN_DIR is not on PATH. Add it to use 'cavekit' directly."
+  fi
 else
   info "Need sudo to install cavekit to $BIN_DIR"
   sudo ln -sf "$INSTALL_DIR/scripts/cavekit" "$BIN_DIR/cavekit"
@@ -212,5 +254,14 @@ printf "\n"
 printf "  ${B}Codex:${R}\n"
 printf "    Linked local bundle via ~/plugins/ck and ~/.agents/plugins/marketplace.json\n"
 printf "    Linked prompts into ~/.codex/prompts (for /prompts:ck-... commands)\n"
+printf "\n"
+printf "  ${B}OpenCode:${R}\n"
+printf "    /ck-help                      Show portable-phase guide\n"
+printf "    /ck-init                      Bootstrap context/ for OpenCode\n"
+printf "    /ck-sketch                    Draft kits with approval gate\n"
+printf "    /ck-map                       Generate build-site.md\n"
+printf "    /ck-make <target>             Sequential scoped implementation\n"
+printf "    /ck-check                     Read-only verification\n"
+printf "    /ck-status                    Snapshot progress report\n"
 printf "\n"
 printf "  Restart Claude Code and Codex to load the plugin changes.\n\n"
