@@ -2,7 +2,7 @@
 name: caveman
 description: |
   Caveman encoding for SPEC.md and spec-adjacent writes. Loaded by /spec, /build,
-  /check. Cuts tokens ~75% vs prose while staying precise. Triggers on any write
+  /check. Cuts tokens vs prose while staying precise. Triggers on any write
   to SPEC.md or when user says "caveman", "compress this", "be brief".
 ---
 

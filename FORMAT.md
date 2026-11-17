@@ -106,7 +106,7 @@ Default for every section. Rules:
 
 ## WHY CAVEMAN FOR SPECS
 
-Spec loaded every invocation. 75% fewer tokens = 75% fewer dollars & faster reads.
+Spec loaded every invocation. Fewer tokens = fewer dollars & faster reads.
 Human skims fast too. Symbols unambiguous.
 
 ## ONE FILE RULE

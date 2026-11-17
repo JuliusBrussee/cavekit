@@ -52,7 +52,7 @@ chatter, not the artifacts that get loaded every invocation.
 Rewrote from the ground up. Here's the whole surface:
 
 - `SPEC.md` at repo root. Six sections (§G §C §I §V §T §B), addressable
-  by section.id. Caveman-encoded by default — ~75% fewer tokens than
+  by section.id. Caveman-encoded by default, so fewer tokens than
   prose. §T (tasks) and §B (bugs) are pipe tables because that's the
   efficient shape for repeating records.
 - Three commands:

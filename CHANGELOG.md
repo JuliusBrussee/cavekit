@@ -35,13 +35,13 @@ opt-in and right-sized — you reach for them only when the change earns it:
   verification contract) instead of "add tests" — "do TDD" alone backfires.
 - `build` reads `§R` so it grounds in researched facts, not re-derivation.
 - `check` reframed as the drift detector: run after each build, before each ship.
-- skill descriptions kept ultra-tight — nine descriptions cost ~1.1k context, 16× lighter than spec-kit's 18.6k.
+- skill descriptions kept ultra-tight.
 
 ### why — pain points → changes (sourced)
 
 | pain point (source) | change |
 |---|---|
-| Token / context tax — spec-kit loads ~18.6k tokens every session (spec-kit #1401); BMAD burns 80–100k/step (#1188) | caveman descriptions keep cavekit's whole nine-skill set at ~1.1k context — 16× lighter |
+| Token / context tax — spec-kit loads ~18.6k tokens every session (spec-kit #1401); BMAD burns 80–100k/step (#1188) | caveman descriptions keep cavekit's nine-skill set short |
 | Specs drift silently with no detector (OpenSpec #1212; spec-kit #1686) | `check` reframed as the drift detector, run every build |
 | Ceremony overkill — 10–15× overhead, "sledgehammer for a nut" (BMAD #2003; HN 45610996) | **right-size** rule; core stays 3 commands; verbs are opt-in |
 | Agents ignore the spec / mark done without doing (spec-kit #230; BMAD #446) | `build` verification contract names which test proves each `§V` |

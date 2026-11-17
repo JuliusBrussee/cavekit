@@ -27,9 +27,8 @@ The spine is three properties that earn their tokens:
 
 - **durable spec** — `SPEC.md` at repo root survives context resets. It is
   the agent's long-term memory: lose the window, reload the spec, keep going.
-- **caveman encoding** — ~75% fewer tokens than prose. Symbols, fragments,
-  pipe tables. All nine skill descriptions cost ~1.1k context — 16× lighter
-  than spec-kit's 18.6k. That is the whole point.
+- **caveman encoding** — fewer tokens than prose. Symbols, fragments,
+  pipe tables. That is the whole point.
 - **backprop reflex** — every test failure becomes a `§B` entry; classes
   of bug become `§V` invariants the spec never forgets.
 
